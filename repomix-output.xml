@@ -1,0 +1,4217 @@
+This file is a merged representation of a subset of the codebase, containing specifically included files and files not matching ignore patterns, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of a subset of the repository's contents that is considered the most important context.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Only files matching these patterns are included: lib/**/*.dart
+- Files matching these patterns are excluded: lib/models/body_outline_path.dart
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+lib/
+  models/
+    body_area.dart
+    clinical_log.dart
+    education_topic.dart
+    scan_history_item.dart
+    symptom.dart
+  screens/
+    account_screen.dart
+    clinic_locator_screen.dart
+    clinical_log_detail_screen.dart
+    clinical_logs_screen.dart
+    discover_screen.dart
+    home_screen.dart
+    main_shell.dart
+    pathology_triage_screen.dart
+    progress_screen.dart
+  theme/
+    app_colors.dart
+    theme_provider.dart
+  widgets/
+    ai_suggestion_card.dart
+    body_map_selector.dart
+    custom_bottom_nav.dart
+    dashboard_header.dart
+    education_carousel.dart
+    high_risk_banner.dart
+    metrics_banner.dart
+    quick_link_tile.dart
+    scan_action_sheet.dart
+    score_hero_card.dart
+    sparkline_chart.dart
+  main.dart
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="lib/models/body_area.dart">
+import 'package:flutter/material.dart';
+
+class BodyArea {
+  final String id;
+  final String label;
+  final IconData icon; // fallback Material icon, always used if iconAsset is null
+  final String? iconAsset; // optional custom SVG path, e.g. assets/icons/body_areas/face.svg
+
+  const BodyArea({
+    required this.id,
+    required this.label,
+    required this.icon,
+    this.iconAsset,
+  });
+
+  // To add your own icon for an area: drop an SVG into
+  // assets/icons/body_areas/, then set iconAsset below to its path.
+  // Leave iconAsset null and it falls back to the Material `icon`.
+  static const all = [
+    BodyArea(
+      id: 'face',
+      label: 'Face',
+      icon: Icons.face_retouching_natural_rounded,
+      iconAsset: 'assets/icons/body_areas/face.svg',
+    ),
+    BodyArea(id: 'scalp', label: 'Scalp', icon: Icons.face_6_rounded),
+    BodyArea(id: 'neck', label: 'Neck', icon: Icons.accessibility_new_rounded),
+    BodyArea(id: 'arms', label: 'Arms', icon: Icons.pan_tool_rounded),
+    BodyArea(
+      id: 'hands',
+      label: 'Hands',
+      icon: Icons.back_hand_rounded,
+      iconAsset: 'assets/icons/body_areas/hands.svg',
+    ),
+    BodyArea(id: 'torso', label: 'Torso / Back', icon: Icons.airline_seat_flat_rounded),
+    BodyArea(id: 'legs', label: 'Legs', icon: Icons.directions_walk_rounded),
+    BodyArea(id: 'feet', label: 'Feet', icon: Icons.snowshoeing_rounded),
+  ];
+}
+</file>
+
+<file path="lib/models/clinical_log.dart">
+import 'package:flutter/material.dart';
+
+enum RiskLevel { low, moderate, high }
+
+enum LogStatus { monitoring, resolved, escalated }
+
+class ClinicalLogEntry {
+  final String id;
+  final String bodyArea;
+  final String condition; // AI-suggested label, e.g. "Suspected Contact Dermatitis"
+  final DateTime loggedAt;
+  final double confidence; // 0.0 - 1.0
+  final RiskLevel risk;
+  final LogStatus status;
+  final List<double> trend; // recent confidence readings for the sparkline
+  final IconData icon;
+  final List<String> recommendations;
+
+  const ClinicalLogEntry({
+    required this.id,
+    required this.bodyArea,
+    required this.condition,
+    required this.loggedAt,
+    required this.confidence,
+    required this.risk,
+    required this.status,
+    required this.trend,
+    required this.recommendations,
+    this.icon = Icons.image_outlined,
+  });
+}
+</file>
+
+<file path="lib/models/education_topic.dart">
+import 'package:flutter/material.dart';
+
+class EducationTopic {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color tint;
+
+  const EducationTopic({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.tint,
+  });
+}
+</file>
+
+<file path="lib/models/scan_history_item.dart">
+import 'package:flutter/material.dart';
+
+enum RiskLevel { low, moderate, high }
+
+class ScanHistoryItem {
+  final String id;
+  final String bodyArea;
+  final DateTime scannedAt;
+  final double confidence; // 0.0 - 1.0
+  final RiskLevel risk;
+  final IconData placeholderIcon;
+
+  const ScanHistoryItem({
+    required this.id,
+    required this.bodyArea,
+    required this.scannedAt,
+    required this.confidence,
+    required this.risk,
+    this.placeholderIcon = Icons.image_outlined,
+  });
+}
+</file>
+
+<file path="lib/models/symptom.dart">
+class Symptom {
+  final String id;
+  final String label;
+
+  const Symptom({required this.id, required this.label});
+
+  static const all = [
+    Symptom(id: 'itching', label: 'Itching'),
+    Symptom(id: 'redness', label: 'Redness'),
+    Symptom(id: 'flaking', label: 'Flaking / Scaling'),
+    Symptom(id: 'bumps', label: 'Bumps or Lesions'),
+    Symptom(id: 'discoloration', label: 'Discoloration'),
+    Symptom(id: 'swelling', label: 'Swelling'),
+    Symptom(id: 'pain', label: 'Pain or Tenderness'),
+    Symptom(id: 'oozing', label: 'Oozing / Crusting'),
+    Symptom(id: 'hairloss', label: 'Hair Thinning / Loss'),
+  ];
+}
+</file>
+
+<file path="lib/screens/account_screen.dart">
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../theme/theme_provider.dart';
+
+class AccountScreen extends StatelessWidget {
+  const AccountScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.watch<ThemeProvider>().colors;
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.person_outline_rounded, size: 40, color: colors.textSecondary),
+          const SizedBox(height: 12),
+          Text(
+            'Account — coming soon',
+            style: TextStyle(color: colors.textSecondary, fontSize: 14),
+          ),
+        ],
+      ),
+    );
+  }
+}
+</file>
+
+<file path="lib/screens/clinic_locator_screen.dart">
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../theme/theme_provider.dart';
+import '../theme/app_colors.dart';
+
+/// Modern clinic locator module. This is pushed automatically whenever
+/// the AI pipeline flags a high-risk scan (see HighRiskBanner), or can
+/// be reached manually from the Discover tab in a full build-out.
+class ClinicLocatorScreen extends StatelessWidget {
+  const ClinicLocatorScreen({super.key});
+
+  static const _clinics = [
+    {'name': 'Skinova Dermatology Center', 'distance': '1.2 km', 'rating': '4.8'},
+    {'name': 'DermaCare Specialist Clinic', 'distance': '2.4 km', 'rating': '4.6'},
+    {'name': 'City General — Dermatology Wing', 'distance': '3.1 km', 'rating': '4.5'},
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.watch<ThemeProvider>().colors;
+
+    return Scaffold(
+      backgroundColor: colors.background,
+      appBar: AppBar(
+        backgroundColor: colors.background,
+        elevation: 0,
+        iconTheme: IconThemeData(color: colors.textPrimary),
+        title: Text(
+          'Nearby Clinics',
+          style: TextStyle(color: colors.textPrimary, fontWeight: FontWeight.w700),
+        ),
+      ),
+      body: Column(
+        children: [
+          // Stylized map placeholder. Swap this container for a real
+          // google_maps_flutter / apple_maps_flutter widget in
+          // production, fed with clinic coordinates from your backend.
+          Container(
+            margin: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+            height: 220,
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              color: colors.surface,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: colors.border),
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Positioned.fill(
+                  child: CustomPaint(painter: _MapGridPainter(colors.border)),
+                ),
+                Icon(Icons.location_on_rounded, color: colors.accent, size: 40),
+                Positioned(
+                  top: 40,
+                  left: 60,
+                  child: Icon(Icons.local_hospital_rounded, color: colors.danger, size: 22),
+                ),
+                Positioned(
+                  bottom: 50,
+                  right: 50,
+                  child: Icon(Icons.local_hospital_rounded, color: colors.danger, size: 22),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: ListView.separated(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              itemCount: _clinics.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (context, index) => _ClinicTile(clinic: _clinics[index], colors: colors),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MapGridPainter extends CustomPainter {
+  final Color lineColor;
+  _MapGridPainter(this.lineColor);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = lineColor
+      ..strokeWidth = 1;
+    for (double x = 0; x < size.width; x += 28) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+    }
+    for (double y = 0; y < size.height; y += 28) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _ClinicTile extends StatelessWidget {
+  final Map<String, String> clinic;
+  final AppColors colors;
+  const _ClinicTile({required this.clinic, required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: colors.border),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: colors.accentSoft,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(Icons.local_hospital_rounded, color: colors.accent),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  clinic['name']!,
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w700,
+                    color: colors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(Icons.star_rounded, size: 14, color: colors.warning),
+                    Text(
+                      ' ${clinic['rating']}  ·  ${clinic['distance']} away',
+                      style: TextStyle(fontSize: 11.5, color: colors.textSecondary),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Icon(Icons.chevron_right_rounded, color: colors.textSecondary),
+        ],
+      ),
+    );
+  }
+}
+</file>
+
+<file path="lib/screens/clinical_log_detail_screen.dart">
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../theme/theme_provider.dart';
+import '../theme/app_colors.dart';
+import '../models/clinical_log.dart';
+import '../widgets/sparkline_chart.dart';
+
+class ClinicalLogDetailScreen extends StatefulWidget {
+  final ClinicalLogEntry log;
+
+  const ClinicalLogDetailScreen({super.key, required this.log});
+
+  @override
+  State<ClinicalLogDetailScreen> createState() => _ClinicalLogDetailScreenState();
+}
+
+class _ClinicalLogDetailScreenState extends State<ClinicalLogDetailScreen> {
+  bool _reviewed = false;
+
+  Color _riskColor(AppColors colors) {
+    switch (widget.log.risk) {
+      case RiskLevel.low:
+        return colors.success;
+      case RiskLevel.moderate:
+        return colors.warning;
+      case RiskLevel.high:
+        return colors.danger;
+    }
+  }
+
+  String get _riskLabel {
+    switch (widget.log.risk) {
+      case RiskLevel.low:
+        return 'Low Risk';
+      case RiskLevel.moderate:
+        return 'Moderate Risk';
+      case RiskLevel.high:
+        return 'High Risk';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.watch<ThemeProvider>().colors;
+    final riskColor = _riskColor(colors);
+    final log = widget.log;
+
+    return Scaffold(
+      backgroundColor: colors.background,
+      appBar: AppBar(
+        backgroundColor: colors.background,
+        elevation: 0,
+        iconTheme: IconThemeData(color: colors.textPrimary),
+        title: Text(log.condition, style: TextStyle(color: colors.textPrimary, fontWeight: FontWeight.w700, fontSize: 16)),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: riskColor,
+              borderRadius: BorderRadius.circular(26),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(_riskLabel, style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700)),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  '${(log.confidence * 100).round()}% confidence',
+                  style: const TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${log.bodyArea} · logged ${_dateLabel(log.loggedAt)}',
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 12.5),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: colors.surface,
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: colors.border),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Confidence Trend', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 90,
+                  width: double.infinity,
+                  child: SparklineChart(
+                    values: log.trend,
+                    lineColor: colors.accent,
+                    fillColor: colors.accent,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: colors.surface,
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: colors.border),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Details', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+                const SizedBox(height: 12),
+                _DetailRow(colors: colors, label: 'Body Area', value: log.bodyArea),
+                _DetailRow(colors: colors, label: 'Date Logged', value: _dateLabel(log.loggedAt)),
+                _DetailRow(colors: colors, label: 'AI Confidence', value: '${(log.confidence * 100).round()}%'),
+                _DetailRow(colors: colors, label: 'Risk Level', value: _riskLabel, valueColor: riskColor),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: colors.surface,
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: colors.border),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Recommendations', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+                const SizedBox(height: 12),
+                for (final rec in log.recommendations) ...[
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.check_circle_rounded, size: 17, color: colors.accent),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            rec,
+                            style: TextStyle(fontSize: 12.5, color: colors.textPrimary, height: 1.4),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _reviewed ? null : () => setState(() => _reviewed = true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _reviewed ? colors.success : colors.accent,
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: colors.success,
+                disabledForegroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+              child: Text(
+                _reviewed ? 'Marked as Reviewed ✓' : 'Mark as Reviewed',
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _dateLabel(DateTime date) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return '${months[date.month - 1]} ${date.day}, ${date.year}';
+  }
+}
+
+class _DetailRow extends StatelessWidget {
+  final AppColors colors;
+  final String label;
+  final String value;
+  final Color? valueColor;
+
+  const _DetailRow({required this.colors, required this.label, required this.value, this.valueColor});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(fontSize: 12.5, color: colors.textSecondary)),
+          Text(
+            value,
+            style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: valueColor ?? colors.textPrimary),
+          ),
+        ],
+      ),
+    );
+  }
+}
+</file>
+
+<file path="lib/screens/clinical_logs_screen.dart">
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../theme/theme_provider.dart';
+import '../theme/app_colors.dart';
+import '../models/clinical_log.dart';
+import 'clinical_log_detail_screen.dart';
+
+class ClinicalLogsScreen extends StatelessWidget {
+  final VoidCallback onLogNewScan;
+
+  const ClinicalLogsScreen({super.key, required this.onLogNewScan});
+
+  static final List<ClinicalLogEntry> _logs = [
+    ClinicalLogEntry(
+      id: '1',
+      bodyArea: 'Left Forearm',
+      condition: 'Mild Contact Dermatitis',
+      loggedAt: DateTime.now().subtract(const Duration(days: 1)),
+      confidence: 0.94,
+      risk: RiskLevel.low,
+      status: LogStatus.monitoring,
+      trend: [0.55, 0.6, 0.7, 0.66, 0.8, 0.88, 0.94],
+      icon: Icons.pan_tool_rounded,
+      recommendations: [
+        'Apply fragrance-free moisturizer twice daily',
+        'Avoid known irritants for 5–7 days',
+        'Rescan in 5 days to confirm improvement',
+      ],
+    ),
+    ClinicalLogEntry(
+      id: '2',
+      bodyArea: 'Scalp - Crown',
+      condition: 'Seborrheic Dermatitis',
+      loggedAt: DateTime.now().subtract(const Duration(days: 4)),
+      confidence: 0.81,
+      risk: RiskLevel.moderate,
+      status: LogStatus.monitoring,
+      trend: [0.4, 0.5, 0.62, 0.7, 0.75, 0.81],
+      icon: Icons.face_6_rounded,
+      recommendations: [
+        'Use an anti-dandruff shampoo 2–3x per week',
+        'Avoid excessive heat styling',
+        'Track flaking severity in your next scan',
+      ],
+    ),
+    ClinicalLogEntry(
+      id: '3',
+      bodyArea: 'Upper Back',
+      condition: 'Irregular Pigmented Lesion',
+      loggedAt: DateTime.now().subtract(const Duration(days: 9)),
+      confidence: 0.76,
+      risk: RiskLevel.high,
+      status: LogStatus.escalated,
+      trend: [0.3, 0.35, 0.5, 0.6, 0.68, 0.76],
+      icon: Icons.priority_high_rounded,
+      recommendations: [
+        'Schedule an in-person dermatologist visit',
+        'Avoid direct sun exposure on the area',
+        'Bring your scan history to the appointment',
+      ],
+    ),
+    ClinicalLogEntry(
+      id: '4',
+      bodyArea: 'Right Cheek',
+      condition: 'Resolved Acne Lesion',
+      loggedAt: DateTime.now().subtract(const Duration(days: 15)),
+      confidence: 0.97,
+      risk: RiskLevel.low,
+      status: LogStatus.resolved,
+      trend: [0.5, 0.62, 0.7, 0.8, 0.9, 0.97],
+      icon: Icons.face_retouching_natural_rounded,
+      recommendations: [
+        "Continue your current routine — it's working",
+        'No further action needed for this spot',
+      ],
+    ),
+    ClinicalLogEntry(
+      id: '5',
+      bodyArea: 'Neck',
+      condition: 'Mild Eczema Flare',
+      loggedAt: DateTime.now().subtract(const Duration(days: 22)),
+      confidence: 0.88,
+      risk: RiskLevel.moderate,
+      status: LogStatus.resolved,
+      trend: [0.45, 0.5, 0.6, 0.7, 0.8, 0.88],
+      icon: Icons.water_drop_outlined,
+      recommendations: [
+        'Keep the area moisturized',
+        'Avoid tight collars or fabric friction',
+      ],
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.watch<ThemeProvider>().colors;
+
+    return CustomScrollView(
+      physics: const BouncingScrollPhysics(),
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+          sliver: SliverToBoxAdapter(
+            child: Text(
+              'Clinical Logs',
+              style: TextStyle(fontSize: 21, fontWeight: FontWeight.w800, color: colors.textPrimary),
+            ),
+          ),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+          sliver: SliverToBoxAdapter(
+            child: Text(
+              'Every scan, tracked over time',
+              style: TextStyle(fontSize: 12.5, color: colors.textSecondary),
+            ),
+          ),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          sliver: SliverToBoxAdapter(
+            child: _LogNewScanCard(colors: colors, onTap: onLogNewScan),
+          ),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+          sliver: SliverToBoxAdapter(
+            child: Text(
+              '${_logs.length} Logged Entries',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: colors.textSecondary),
+            ),
+          ),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          sliver: SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final log = _logs[index];
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _LogRow(
+                    colors: colors,
+                    log: log,
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => ClinicalLogDetailScreen(log: log)),
+                      );
+                    },
+                  ),
+                );
+              },
+              childCount: _logs.length,
+            ),
+          ),
+        ),
+        const SliverToBoxAdapter(child: SizedBox(height: 120)),
+      ],
+    );
+  }
+}
+
+class _LogNewScanCard extends StatelessWidget {
+  final AppColors colors;
+  final VoidCallback onTap;
+
+  const _LogNewScanCard({required this.colors, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: colors.accent,
+      borderRadius: BorderRadius.circular(22),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(22),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(18),
+          child: Row(
+            children: [
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.5), width: 1.4),
+                ),
+                child: const Icon(Icons.qr_code_scanner_rounded, color: Colors.white, size: 22),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Log a New Scan',
+                      style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Capture or upload a photo to start',
+                      style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 11.5),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.arrow_forward_rounded, color: Colors.white),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LogRow extends StatelessWidget {
+  final AppColors colors;
+  final ClinicalLogEntry log;
+  final VoidCallback onTap;
+
+  const _LogRow({required this.colors, required this.log, required this.onTap});
+
+  Color get _statusColor {
+    switch (log.status) {
+      case LogStatus.monitoring:
+        return colors.warning;
+      case LogStatus.resolved:
+        return colors.success;
+      case LogStatus.escalated:
+        return colors.danger;
+    }
+  }
+
+  String get _statusLabel {
+    switch (log.status) {
+      case LogStatus.monitoring:
+        return 'Monitoring';
+      case LogStatus.resolved:
+        return 'Resolved';
+      case LogStatus.escalated:
+        return 'Escalated';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: colors.surface,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: colors.border),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: _statusColor.withValues(alpha: 0.08),
+                  border: Border.all(color: _statusColor.withValues(alpha: 0.45), width: 1.4),
+                ),
+                child: Icon(log.icon, color: _statusColor, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      log.condition,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: colors.textPrimary),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      '${log.bodyArea} · ${_timeAgo(log.loggedAt)}',
+                      style: TextStyle(fontSize: 11.5, color: colors.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: _statusColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      _statusLabel,
+                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: _statusColor),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '${(log.confidence * 100).round()}%',
+                    style: TextStyle(fontSize: 10.5, color: colors.textSecondary, fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _timeAgo(DateTime date) {
+    final days = DateTime.now().difference(date).inDays;
+    if (days == 0) return 'Today';
+    if (days == 1) return 'Yesterday';
+    return '$days days ago';
+  }
+}
+</file>
+
+<file path="lib/screens/discover_screen.dart">
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../theme/theme_provider.dart';
+
+class DiscoverScreen extends StatelessWidget {
+  const DiscoverScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.watch<ThemeProvider>().colors;
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.explore_outlined, size: 40, color: colors.textSecondary),
+          const SizedBox(height: 12),
+          Text(
+            'Discover — coming soon',
+            style: TextStyle(color: colors.textSecondary, fontSize: 14),
+          ),
+        ],
+      ),
+    );
+  }
+}
+</file>
+
+<file path="lib/screens/home_screen.dart">
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../theme/theme_provider.dart';
+import '../theme/app_colors.dart';
+import '../widgets/dashboard_header.dart';
+import '../widgets/metrics_banner.dart';
+import '../widgets/education_carousel.dart';
+import '../widgets/high_risk_banner.dart';
+import '../widgets/score_hero_card.dart';
+import '../widgets/ai_suggestion_card.dart';
+import '../widgets/quick_link_tile.dart';
+
+class HomeScreen extends StatelessWidget {
+  final bool highRiskFlag;
+  final VoidCallback onDismissRiskBanner;
+  final VoidCallback onViewClinics;
+  final VoidCallback onSimulateHighRisk;
+  final VoidCallback onOpenTriage;
+  final VoidCallback onOpenLogs;
+
+  const HomeScreen({
+    super.key,
+    required this.highRiskFlag,
+    required this.onDismissRiskBanner,
+    required this.onViewClinics,
+    required this.onSimulateHighRisk,
+    required this.onOpenTriage,
+    required this.onOpenLogs,
+  });
+
+  static const _weeklyActivity = [0.3, 0.5, 0.2, 0.8, 0.6, 0.9, 0.4];
+  static const _weeklyLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+  static const _scoreTrend = [0.62, 0.68, 0.7, 0.66, 0.74, 0.8, 0.83, 0.88];
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.watch<ThemeProvider>().colors;
+
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.only(bottom: 120),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const DashboardHeader(),
+
+          // Auto-shown whenever the AI pipeline flags a high-risk scan.
+          if (highRiskFlag)
+            HighRiskBanner(
+              colors: colors,
+              onViewClinics: onViewClinics,
+              onDismiss: onDismissRiskBanner,
+            ),
+
+          // Hero "Skin Health Score" card — the at-a-glance headline
+          // metric, mirroring the reference kit's Asklepios Score card.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+            child: ScoreHeroCard(
+              colors: colors,
+              statusLabel: 'Skin Health · Normal',
+              scoreValue: '88',
+              subtitle: 'Your scalp and skin are trending healthy this week',
+              trend: _scoreTrend,
+              onTap: onOpenLogs,
+            ),
+          ),
+
+          const MetricsBanner(),
+
+          // Weekly scan activity — small bar chart, same rhythm as the
+          // reference kit's "Blood Pressure Stats" card.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+            child: Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: colors.surface,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: colors.border),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Weekly Scan Activity',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                      Text(
+                        '3 this week',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                          color: colors.accent,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  _WeeklyBars(colors: colors, values: _weeklyActivity, labels: _weeklyLabels),
+                ],
+              ),
+            ),
+          ),
+
+          // Quick links to the two pivoted sections + the AI chatbot.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Quick Actions',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: colors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                QuickLinkTile(
+                  colors: colors,
+                  icon: Icons.health_and_safety_rounded,
+                  tint: colors.accent,
+                  title: 'Pathology Triage',
+                  subtitle: 'Answer a few questions to assess a spot',
+                  onTap: onOpenTriage,
+                ),
+                const SizedBox(height: 10),
+                QuickLinkTile(
+                  colors: colors,
+                  icon: Icons.receipt_long_rounded,
+                  tint: colors.warning,
+                  title: 'Clinical Logs',
+                  subtitle: '6 logged entries · last updated yesterday',
+                  onTap: onOpenLogs,
+                ),
+                const SizedBox(height: 10),
+                QuickLinkTile(
+                  colors: colors,
+                  icon: Icons.smart_toy_outlined,
+                  tint: const Color(0xFF6366F1),
+                  title: 'Skin AI Chatbot',
+                  subtitle: 'Ask about a symptom or treatment',
+                  trailingBadge: 'New',
+                  onTap: () => _showChatbotComingSoon(context, colors),
+                ),
+              ],
+            ),
+          ),
+
+          // AI suggestions feed.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+            child: AiSuggestionCard(
+              colors: colors,
+              title: 'AI Suggestions',
+              suggestions: [
+                AiSuggestion(
+                  title: 'Switch to a fragrance-free moisturizer',
+                  subtitle: 'Based on the redness pattern on your left forearm',
+                  icon: Icons.water_drop_outlined,
+                  tint: colors.accent,
+                ),
+                AiSuggestion(
+                  title: 'Apply SPF 30+ before midday sun exposure',
+                  subtitle: 'Your scalp scan showed early UV sensitivity',
+                  icon: Icons.wb_sunny_outlined,
+                  tint: colors.warning,
+                ),
+                const AiSuggestion(
+                  title: 'Re-scan your neck area in 5 days',
+                  subtitle: 'To confirm the flaking has resolved',
+                  icon: Icons.replay_rounded,
+                  tint: Color(0xFF6366F1),
+                ),
+              ],
+            ),
+          ),
+
+          const EducationCarousel(),
+          const SizedBox(height: 24),
+
+          // Demo-only trigger so you can see the high-risk banner flow
+          // without wiring up a real inference pipeline yet.
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: TextButton(
+              onPressed: onSimulateHighRisk,
+              child: Text(
+                'Simulate high-risk AI result (demo)',
+                style: TextStyle(color: colors.textSecondary, fontSize: 11.5),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showChatbotComingSoon(BuildContext context, AppColors colors) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Skin AI Chatbot is coming soon.'),
+        backgroundColor: colors.textPrimary,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+}
+
+class _WeeklyBars extends StatelessWidget {
+  final AppColors colors;
+  final List<double> values;
+  final List<String> labels;
+
+  const _WeeklyBars({required this.colors, required this.values, required this.labels});
+
+  @override
+  Widget build(BuildContext context) {
+    // Highlight today (Saturday in this sample dataset, index 5).
+    return SizedBox(
+      height: 80,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          for (int i = 0; i < values.length; i++)
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 3),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      height: 56,
+                      child: Align(
+                        alignment: Alignment.bottomCenter,
+                        child: FractionallySizedBox(
+                          heightFactor: values[i].clamp(0.05, 1.0),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: i == 5 ? colors.accent : colors.accentSoft,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      labels[i],
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: i == 5 ? FontWeight.w700 : FontWeight.w500,
+                        color: i == 5 ? colors.accent : colors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+</file>
+
+<file path="lib/screens/main_shell.dart">
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../theme/theme_provider.dart';
+import '../widgets/custom_bottom_nav.dart';
+import '../widgets/scan_action_sheet.dart';
+import 'home_screen.dart';
+import 'pathology_triage_screen.dart';
+import 'clinical_logs_screen.dart';
+import 'account_screen.dart';
+import 'clinic_locator_screen.dart';
+
+/// Root scaffold. Holds the local UI state shared across tabs — active
+/// tab, scan overlay, and the AI risk flag — using plain StatefulWidget
+/// + setState (Flutter's equivalent of useState).
+///
+/// Tabs: Home Dashboard · Pathology Triage · Clinical Logs · Account.
+class MainShell extends StatefulWidget {
+  const MainShell({super.key});
+
+  @override
+  State<MainShell> createState() => _MainShellState();
+}
+
+class _MainShellState extends State<MainShell> {
+  int _currentIndex = 0;
+  bool _highRiskFlag = false; // set by the AI background pipeline in production
+
+  void _onNavTap(int index) {
+    setState(() => _currentIndex = index);
+  }
+
+  void _openScanSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => ScanActionSheet(
+        onViewHistory: () {
+          Navigator.pop(context);
+          setState(() => _currentIndex = 2); // jump straight to Clinical Logs
+        },
+      ),
+    );
+  }
+
+  void _openClinicLocator() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const ClinicLocatorScreen()),
+    );
+  }
+
+  /// Demo hook standing in for the real AI background pipeline. Wire
+  /// this up to fire automatically once a scan result comes back with
+  /// a high-risk classification.
+  void _simulateHighRiskScan() {
+    setState(() => _highRiskFlag = true);
+  }
+
+  /// Fired when the Pathology Triage flow finishes. If the mock/real
+  /// model flags the result as high risk, surface the same banner +
+  /// clinic-locator redirect used for scan results elsewhere.
+  void _onTriageComplete(bool isHighRisk) {
+    if (isHighRisk) {
+      setState(() => _highRiskFlag = true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.watch<ThemeProvider>().colors;
+
+    final screens = [
+      HomeScreen(
+        highRiskFlag: _highRiskFlag,
+        onDismissRiskBanner: () => setState(() => _highRiskFlag = false),
+        onViewClinics: _openClinicLocator,
+        onSimulateHighRisk: _simulateHighRiskScan,
+        onOpenTriage: () => setState(() => _currentIndex = 1),
+        onOpenLogs: () => setState(() => _currentIndex = 2),
+      ),
+      PathologyTriageScreen(
+        onViewClinics: _openClinicLocator,
+        onTriageComplete: _onTriageComplete,
+      ),
+      ClinicalLogsScreen(onLogNewScan: _openScanSheet),
+      const AccountScreen(),
+    ];
+
+    return Scaffold(
+      backgroundColor: colors.background,
+      body: SafeArea(
+        top: false,
+        child: IndexedStack(index: _currentIndex, children: screens),
+      ),
+      bottomNavigationBar: CustomBottomNav(
+        currentIndex: _currentIndex,
+        onTap: _onNavTap,
+        onScanTap: _openScanSheet,
+      ),
+    );
+  }
+}
+</file>
+
+<file path="lib/screens/pathology_triage_screen.dart">
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../theme/theme_provider.dart';
+import '../theme/app_colors.dart';
+import '../models/body_area.dart';
+import '../models/symptom.dart';
+import '../widgets/score_hero_card.dart';
+import '../widgets/body_map_selector.dart';
+
+/// Standalone triage flow reachable from the Home dashboard's "Pathology
+/// Triage" quick link or the bottom nav's Triage tab. Steps: pick the
+/// affected area, log symptoms, capture/upload a photo, then a mock
+/// analysis pass produces a risk-tiered result — same shape as the
+/// reference kit's assessment-to-score flow.
+class PathologyTriageScreen extends StatefulWidget {
+  final VoidCallback onViewClinics;
+  final ValueChanged<bool> onTriageComplete; // true = high risk result
+
+  const PathologyTriageScreen({
+    super.key,
+    required this.onViewClinics,
+    required this.onTriageComplete,
+  });
+
+  @override
+  State<PathologyTriageScreen> createState() => _PathologyTriageScreenState();
+}
+
+enum _TriageRisk { low, moderate, high }
+
+class _PathologyTriageScreenState extends State<PathologyTriageScreen> {
+  static const _totalSteps = 4; // area, symptoms, capture, result (analyzing is transient)
+
+  int _step = 0;
+  bool _analyzing = false;
+  String? _selectedAreaId;
+  final Set<String> _selectedSymptomIds = {};
+  _TriageRisk? _result;
+
+  void _goBack() {
+    if (_step == 0) return;
+    setState(() => _step -= 1);
+  }
+
+  void _selectArea(String id) => setState(() => _selectedAreaId = id);
+
+  void _toggleSymptom(String id) {
+    setState(() {
+      if (_selectedSymptomIds.contains(id)) {
+        _selectedSymptomIds.remove(id);
+      } else {
+        _selectedSymptomIds.add(id);
+      }
+    });
+  }
+
+  void _capturePhoto() {
+    setState(() {
+      _step = 3; // jump straight into analyzing
+      _analyzing = true;
+    });
+    _runAnalysis();
+  }
+
+  /// Placeholder for the real inference call. Swap this for your actual
+  /// model request — everything downstream just needs a _TriageRisk.
+  Future<void> _runAnalysis() async {
+    await Future.delayed(const Duration(milliseconds: 1800));
+    if (!mounted) return;
+
+    final flagCount = _selectedSymptomIds.length;
+    final hasSevereSigns = _selectedSymptomIds.contains('bumps') &&
+        _selectedSymptomIds.contains('discoloration');
+
+    final risk = hasSevereSigns || flagCount >= 5
+        ? _TriageRisk.high
+        : flagCount >= 2
+            ? _TriageRisk.moderate
+            : _TriageRisk.low;
+
+    setState(() {
+      _analyzing = false;
+      _result = risk;
+    });
+    widget.onTriageComplete(risk == _TriageRisk.high);
+  }
+
+  void _startOver() {
+    setState(() {
+      _step = 0;
+      _selectedAreaId = null;
+      _selectedSymptomIds.clear();
+      _result = null;
+      _analyzing = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.watch<ThemeProvider>().colors;
+
+    if (_analyzing) {
+      return _AnalyzingView(colors: colors);
+    }
+
+    return SafeArea(
+      child: Column(
+        children: [
+          _TriageHeader(
+            colors: colors,
+            step: _step,
+            totalSteps: _totalSteps,
+            onBack: _step > 0 && _result == null ? _goBack : null,
+          ),
+          Expanded(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 220),
+              child: _buildStep(colors),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStep(AppColors colors) {
+    if (_result != null) {
+      return _ResultView(
+        key: const ValueKey('result'),
+        colors: colors,
+        risk: _result!,
+        area: BodyArea.all.firstWhere((a) => a.id == _selectedAreaId, orElse: () => BodyArea.all.first),
+        symptomCount: _selectedSymptomIds.length,
+        onViewClinics: widget.onViewClinics,
+        onStartOver: _startOver,
+      );
+    }
+
+    switch (_step) {
+      case 0:
+        return _AreaStep(
+          key: const ValueKey('area'),
+          colors: colors,
+          selectedId: _selectedAreaId,
+          onSelect: _selectArea,
+          onContinue: _selectedAreaId != null ? () => setState(() => _step = 1) : null,
+        );
+      case 1:
+        return _SymptomStep(
+          key: const ValueKey('symptoms'),
+          colors: colors,
+          selectedIds: _selectedSymptomIds,
+          onToggle: _toggleSymptom,
+          onContinue: _selectedSymptomIds.isNotEmpty ? () => setState(() => _step = 2) : null,
+        );
+      case 2:
+      default:
+        return _CaptureStep(
+          key: const ValueKey('capture'),
+          colors: colors,
+          onCapture: _capturePhoto,
+        );
+    }
+  }
+}
+
+class _TriageHeader extends StatelessWidget {
+  final AppColors colors;
+  final int step;
+  final int totalSteps;
+  final VoidCallback? onBack;
+
+  const _TriageHeader({
+    required this.colors,
+    required this.step,
+    required this.totalSteps,
+    required this.onBack,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 20, 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              SizedBox(
+                width: 40,
+                height: 40,
+                child: onBack == null
+                    ? null
+                    : IconButton(
+                        onPressed: onBack,
+                        icon: Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: colors.textPrimary),
+                      ),
+              ),
+              Expanded(
+                child: Text(
+                  'Pathology Triage',
+                  textAlign: onBack == null ? TextAlign.left : TextAlign.center,
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: colors.textPrimary),
+                ),
+              ),
+              const SizedBox(width: 40),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              for (int i = 0; i < totalSteps; i++) ...[
+                Expanded(
+                  child: Container(
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: i <= step ? colors.accent : colors.border,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ),
+                if (i != totalSteps - 1) const SizedBox(width: 6),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AreaStep extends StatelessWidget {
+  final AppColors colors;
+  final String? selectedId;
+  final ValueChanged<String> onSelect;
+  final VoidCallback? onContinue;
+
+  const _AreaStep({
+    super.key,
+    required this.colors,
+    required this.selectedId,
+    required this.onSelect,
+    required this.onContinue,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Where is the affected area?',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: colors.textPrimary),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Select the body area you want to assess',
+                style: TextStyle(fontSize: 13, color: colors.textSecondary),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 100),
+            physics: const BouncingScrollPhysics(),
+            child: BodyMapSelector(
+              colors: colors,
+              selectedId: selectedId,
+              onSelect: onSelect,
+            ),
+          ),
+        ),
+        _ContinueBar(colors: colors, onContinue: onContinue),
+      ],
+    );
+  }
+}
+
+class _SymptomStep extends StatelessWidget {
+  final AppColors colors;
+  final Set<String> selectedIds;
+  final ValueChanged<String> onToggle;
+  final VoidCallback? onContinue;
+
+  const _SymptomStep({
+    super.key,
+    required this.colors,
+    required this.selectedIds,
+    required this.onToggle,
+    required this.onContinue,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'What are you noticing?',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: colors.textPrimary),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Select all symptoms that apply',
+                style: TextStyle(fontSize: 13, color: colors.textSecondary),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
+            child: Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                for (final symptom in Symptom.all)
+                  _SymptomChip(
+                    colors: colors,
+                    label: symptom.label,
+                    selected: selectedIds.contains(symptom.id),
+                    onTap: () => onToggle(symptom.id),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        _ContinueBar(colors: colors, onContinue: onContinue),
+      ],
+    );
+  }
+}
+
+class _CaptureStep extends StatelessWidget {
+  final AppColors colors;
+  final VoidCallback onCapture;
+
+  const _CaptureStep({super.key, required this.colors, required this.onCapture});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Add a photo',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: colors.textPrimary),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'A clear, well-lit photo gives the most accurate assessment',
+            style: TextStyle(fontSize: 13, color: colors.textSecondary),
+          ),
+          const SizedBox(height: 28),
+          Expanded(
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: colors.surface,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: colors.border, style: BorderStyle.solid),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.image_search_rounded, size: 48, color: colors.textSecondary),
+                  const SizedBox(height: 10),
+                  Text('No photo yet', style: TextStyle(color: colors.textSecondary, fontSize: 13)),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          _CaptureOptionButton(
+            colors: colors,
+            icon: Icons.camera_alt_rounded,
+            label: 'Take Live Photo',
+            filled: true,
+            onTap: onCapture,
+          ),
+          const SizedBox(height: 12),
+          _CaptureOptionButton(
+            colors: colors,
+            icon: Icons.photo_library_rounded,
+            label: 'Upload from Device Library',
+            filled: false,
+            onTap: onCapture,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AnalyzingView extends StatelessWidget {
+  final AppColors colors;
+  const _AnalyzingView({required this.colors});
+
+  // Intentionally fixed regardless of light/dark theme — mirrors the
+  // reference kit's dark "compiling" screen, which reads as a distinct
+  // processing state rather than following the app's day/night mode.
+  static const _bg = Color(0xFF0F172A);
+  static const _fg = Color(0xFFF8FAFC);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: _bg,
+      child: SafeArea(
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 56,
+                height: 56,
+                child: CircularProgressIndicator(
+                  strokeWidth: 3,
+                  valueColor: AlwaysStoppedAnimation(colors.accent),
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Analyzing your scan…',
+                style: TextStyle(
+                  color: _fg,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Please wait a moment',
+                style: TextStyle(color: _fg.withValues(alpha: 0.6), fontSize: 12.5),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ResultView extends StatelessWidget {
+  final AppColors colors;
+  final _TriageRisk risk;
+  final BodyArea area;
+  final int symptomCount;
+  final VoidCallback onViewClinics;
+  final VoidCallback onStartOver;
+
+  const _ResultView({
+    super.key,
+    required this.colors,
+    required this.risk,
+    required this.area,
+    required this.symptomCount,
+    required this.onViewClinics,
+    required this.onStartOver,
+  });
+
+  Color get _riskColor {
+    switch (risk) {
+      case _TriageRisk.low:
+        return colors.success;
+      case _TriageRisk.moderate:
+        return colors.warning;
+      case _TriageRisk.high:
+        return colors.danger;
+    }
+  }
+
+  String get _riskLabel {
+    switch (risk) {
+      case _TriageRisk.low:
+        return 'Low Risk';
+      case _TriageRisk.moderate:
+        return 'Moderate Risk';
+      case _TriageRisk.high:
+        return 'High Risk';
+    }
+  }
+
+  String get _riskMessage {
+    switch (risk) {
+      case _TriageRisk.low:
+        return "This doesn't show signs of concern. We'll keep an eye on it in your Clinical Logs.";
+      case _TriageRisk.moderate:
+        return 'Worth monitoring closely. Consider a follow-up scan in a few days.';
+      case _TriageRisk.high:
+        return 'These signs warrant a professional opinion soon.';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ScoreHeroCard(
+            colors: colors,
+            overrideColor: _riskColor,
+            statusLabel: _riskLabel,
+            scoreValue: risk == _TriageRisk.low ? '92' : risk == _TriageRisk.moderate ? '61' : '28',
+            scoreUnit: '/ 100',
+            subtitle: '${area.label} · $symptomCount symptom${symptomCount == 1 ? '' : 's'} logged',
+          ),
+          const SizedBox(height: 18),
+          Text(
+            _riskMessage,
+            style: TextStyle(fontSize: 13.5, color: colors.textSecondary, height: 1.5),
+          ),
+          const SizedBox(height: 24),
+          if (risk == _TriageRisk.high)
+            ElevatedButton(
+              onPressed: onViewClinics,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: colors.danger,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+              child: const Text('Find Nearby Clinics', style: TextStyle(fontWeight: FontWeight.w700)),
+            )
+          else
+            ElevatedButton(
+              onPressed: onStartOver,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: colors.accent,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+              child: const Text('Saved to Clinical Logs', style: TextStyle(fontWeight: FontWeight.w700)),
+            ),
+          const SizedBox(height: 10),
+          TextButton(
+            onPressed: onStartOver,
+            child: Text('Start a new triage', style: TextStyle(color: colors.textSecondary, fontSize: 12.5)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SymptomChip extends StatelessWidget {
+  final AppColors colors;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _SymptomChip({
+    required this.colors,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected ? colors.accent : colors.surface,
+      borderRadius: BorderRadius.circular(30),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(30),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(color: selected ? colors.accent : colors.border),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: selected ? Colors.white : colors.textPrimary,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CaptureOptionButton extends StatelessWidget {
+  final AppColors colors;
+  final IconData icon;
+  final String label;
+  final bool filled;
+  final VoidCallback onTap;
+
+  const _CaptureOptionButton({
+    required this.colors,
+    required this.icon,
+    required this.label,
+    required this.filled,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: filled ? colors.accent : colors.surface,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 15),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: filled ? null : Border.all(color: colors.border),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 19, color: filled ? Colors.white : colors.textPrimary),
+              const SizedBox(width: 10),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w700,
+                  color: filled ? Colors.white : colors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ContinueBar extends StatelessWidget {
+  final AppColors colors;
+  final VoidCallback? onContinue;
+
+  const _ContinueBar({required this.colors, required this.onContinue});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+      decoration: BoxDecoration(
+        color: colors.background,
+        border: Border(top: BorderSide(color: colors.border)),
+      ),
+      child: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          onPressed: onContinue,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: colors.accent,
+            foregroundColor: Colors.white,
+            disabledBackgroundColor: colors.border,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          ),
+          child: const Text('Continue', style: TextStyle(fontWeight: FontWeight.w700)),
+        ),
+      ),
+    );
+  }
+}
+</file>
+
+<file path="lib/screens/progress_screen.dart">
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../theme/theme_provider.dart';
+import '../theme/app_colors.dart';
+import '../models/scan_history_item.dart';
+
+/// Chronologically structured grid of past scans, showing body area,
+/// AI confidence score, risk level, and time-since-scan — used both as
+/// the "Progress" tab and as the destination for "View Past Scan
+/// History" from the scan overlay menu.
+class ProgressScreen extends StatelessWidget {
+  const ProgressScreen({super.key});
+
+  static final List<ScanHistoryItem> _history = [
+    ScanHistoryItem(
+      id: '1',
+      bodyArea: 'Left Forearm',
+      scannedAt: DateTime.now().subtract(const Duration(days: 1)),
+      confidence: 0.94,
+      risk: RiskLevel.low,
+    ),
+    ScanHistoryItem(
+      id: '2',
+      bodyArea: 'Scalp - Crown',
+      scannedAt: DateTime.now().subtract(const Duration(days: 4)),
+      confidence: 0.81,
+      risk: RiskLevel.moderate,
+    ),
+    ScanHistoryItem(
+      id: '3',
+      bodyArea: 'Upper Back',
+      scannedAt: DateTime.now().subtract(const Duration(days: 9)),
+      confidence: 0.76,
+      risk: RiskLevel.high,
+    ),
+    ScanHistoryItem(
+      id: '4',
+      bodyArea: 'Right Cheek',
+      scannedAt: DateTime.now().subtract(const Duration(days: 15)),
+      confidence: 0.97,
+      risk: RiskLevel.low,
+    ),
+    ScanHistoryItem(
+      id: '5',
+      bodyArea: 'Neck',
+      scannedAt: DateTime.now().subtract(const Duration(days: 22)),
+      confidence: 0.88,
+      risk: RiskLevel.moderate,
+    ),
+    ScanHistoryItem(
+      id: '6',
+      bodyArea: 'Left Forearm',
+      scannedAt: DateTime.now().subtract(const Duration(days: 30)),
+      confidence: 0.90,
+      risk: RiskLevel.low,
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.watch<ThemeProvider>().colors;
+    final grouped = _groupByMonth(_history);
+
+    return CustomScrollView(
+      physics: const BouncingScrollPhysics(),
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+          sliver: SliverToBoxAdapter(
+            child: Text(
+              'Scan Progress',
+              style: TextStyle(
+                fontSize: 21,
+                fontWeight: FontWeight.w800,
+                color: colors.textPrimary,
+              ),
+            ),
+          ),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
+          sliver: SliverToBoxAdapter(
+            child: Text(
+              'Track how each spot changes over time',
+              style: TextStyle(fontSize: 12.5, color: colors.textSecondary),
+            ),
+          ),
+        ),
+        for (final group in grouped.entries) ...[
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+            sliver: SliverToBoxAdapter(
+              child: Text(
+                group.key,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: colors.textSecondary,
+                ),
+              ),
+            ),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            sliver: SliverGrid(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: 0.82,
+              ),
+              delegate: SliverChildBuilderDelegate(
+                (context, index) => _ScanCard(item: group.value[index], colors: colors),
+                childCount: group.value.length,
+              ),
+            ),
+          ),
+        ],
+        const SliverToBoxAdapter(child: SizedBox(height: 120)),
+      ],
+    );
+  }
+
+  Map<String, List<ScanHistoryItem>> _groupByMonth(List<ScanHistoryItem> items) {
+    final sorted = [...items]..sort((a, b) => b.scannedAt.compareTo(a.scannedAt));
+    final map = <String, List<ScanHistoryItem>>{};
+    for (final item in sorted) {
+      final key = _monthLabel(item.scannedAt);
+      map.putIfAbsent(key, () => []).add(item);
+    }
+    return map;
+  }
+
+  String _monthLabel(DateTime date) {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    ];
+    return '${months[date.month - 1]} ${date.year}';
+  }
+}
+
+class _ScanCard extends StatelessWidget {
+  final ScanHistoryItem item;
+  final AppColors colors;
+
+  const _ScanCard({required this.item, required this.colors});
+
+  Color _riskColor() {
+    switch (item.risk) {
+      case RiskLevel.low:
+        return colors.success;
+      case RiskLevel.moderate:
+        return colors.warning;
+      case RiskLevel.high:
+        return colors.danger;
+    }
+  }
+
+  String _riskLabel() {
+    switch (item.risk) {
+      case RiskLevel.low:
+        return 'Low Risk';
+      case RiskLevel.moderate:
+        return 'Moderate';
+      case RiskLevel.high:
+        return 'High Risk';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: colors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: colors.accentSoft,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(item.placeholderIcon, color: colors.accent, size: 30),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            item.bodyArea,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: colors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Container(
+                width: 6,
+                height: 6,
+                decoration: BoxDecoration(color: _riskColor(), shape: BoxShape.circle),
+              ),
+              const SizedBox(width: 5),
+              Text(
+                _riskLabel(),
+                style: TextStyle(
+                  fontSize: 10.5,
+                  color: _riskColor(),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '${(item.confidence * 100).round()}%',
+                style: TextStyle(
+                  fontSize: 10.5,
+                  color: colors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Text(
+            _timeAgo(item.scannedAt),
+            style: TextStyle(fontSize: 10, color: colors.textSecondary),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _timeAgo(DateTime date) {
+    final days = DateTime.now().difference(date).inDays;
+    if (days == 0) return 'Today';
+    if (days == 1) return 'Yesterday';
+    return '$days days ago';
+  }
+}
+</file>
+
+<file path="lib/theme/app_colors.dart">
+import 'package:flutter/material.dart';
+
+/// Centralized color system for the Skin & Scalp AI Assistant.
+/// Two curated palettes: a soft clinical light mode and a deep
+/// obsidian dark mode, both anchored by a warm coral/clay accent —
+/// chosen deliberately over green or red so it never competes with
+/// the risk-status colors (success/warning/danger) below.
+class AppColors {
+  final Color background;
+  final Color surface;
+  final Color textPrimary;
+  final Color textSecondary;
+  final Color accent;
+  final Color accentSoft;
+  final Color border;
+  final Color success;
+  final Color warning;
+  final Color danger;
+
+  const AppColors({
+    required this.background,
+    required this.surface,
+    required this.textPrimary,
+    required this.textSecondary,
+    required this.accent,
+    required this.accentSoft,
+    required this.border,
+    required this.success,
+    required this.warning,
+    required this.danger,
+  });
+
+  static const light = AppColors(
+    background: Color(0xFFF8FAFC),
+    surface: Color(0xFFFFFFFF),
+    textPrimary: Color(0xFF1E293B),
+    textSecondary: Color(0xFF64748B),
+    accent: Color(0xFFD97757),
+    accentSoft: Color(0xFFFBE7DE),
+    border: Color(0xFFE2E8F0),
+    success: Color(0xFF16A34A),
+    warning: Color(0xFFD97706),
+    danger: Color(0xFFDC2626),
+  );
+
+  static const dark = AppColors(
+    background: Color(0xFF0F172A),
+    surface: Color(0xFF1E293B),
+    textPrimary: Color(0xFFF8FAFC),
+    textSecondary: Color(0xFF94A3B8),
+    accent: Color(0xFFE8916F),
+    accentSoft: Color(0xFF3D2A22),
+    border: Color(0xFF334155),
+    success: Color(0xFF22C55E),
+    warning: Color(0xFFF59E0B),
+    danger: Color(0xFFEF4444),
+  );
+}
+</file>
+
+<file path="lib/theme/theme_provider.dart">
+import 'package:flutter/material.dart';
+import 'app_colors.dart';
+
+/// Global theme state. Wrap the app in `ChangeNotifierProvider` and any
+/// widget that calls `context.watch<ThemeProvider>()` rebuilds
+/// automatically when [toggleTheme] fires — the Flutter equivalent of a
+/// React context + useState pair.
+class ThemeProvider extends ChangeNotifier {
+  bool _isDarkMode = false;
+
+  bool get isDarkMode => _isDarkMode;
+  AppColors get colors => _isDarkMode ? AppColors.dark : AppColors.light;
+  Brightness get brightness =>
+      _isDarkMode ? Brightness.dark : Brightness.light;
+
+  void toggleTheme() {
+    _isDarkMode = !_isDarkMode;
+    notifyListeners();
+  }
+
+  void setDarkMode(bool value) {
+    if (_isDarkMode == value) return;
+    _isDarkMode = value;
+    notifyListeners();
+  }
+}
+</file>
+
+<file path="lib/widgets/ai_suggestion_card.dart">
+import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
+
+class AiSuggestion {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color tint;
+
+  const AiSuggestion({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.tint,
+  });
+}
+
+/// Card containing a short list of AI-generated suggestions, each shown
+/// as a slim accent bar + bare icon + title/detail — an editorial "feed"
+/// treatment, deliberately distinct from the boxed-icon badges used for
+/// navigation elements elsewhere in the app.
+class AiSuggestionCard extends StatelessWidget {
+  final AppColors colors;
+  final String title;
+  final List<AiSuggestion> suggestions;
+
+  const AiSuggestionCard({
+    super.key,
+    required this.colors,
+    required this.title,
+    required this.suggestions,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: colors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: colors.textPrimary,
+                ),
+              ),
+              Icon(Icons.auto_awesome_rounded, size: 16, color: colors.accent),
+            ],
+          ),
+          const SizedBox(height: 14),
+          for (int i = 0; i < suggestions.length; i++) ...[
+            _SuggestionRow(colors: colors, suggestion: suggestions[i]),
+            if (i != suggestions.length - 1) ...[
+              const SizedBox(height: 12),
+              Divider(height: 1, color: colors.border),
+              const SizedBox(height: 12),
+            ],
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _SuggestionRow extends StatelessWidget {
+  final AppColors colors;
+  final AiSuggestion suggestion;
+
+  const _SuggestionRow({required this.colors, required this.suggestion});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // A slim accent bar instead of a boxed icon — reads as "one
+        // entry in a feed" rather than another app-icon-style badge.
+        Container(
+          width: 3,
+          height: 34,
+          margin: const EdgeInsets.only(top: 2),
+          decoration: BoxDecoration(
+            color: suggestion.tint,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Icon(suggestion.icon, color: suggestion.tint, size: 18),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                suggestion.title,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: colors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                suggestion.subtitle,
+                style: TextStyle(fontSize: 11.5, color: colors.textSecondary),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+</file>
+
+<file path="lib/widgets/body_map_selector.dart">
+import 'dart:typed_data';
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:path_drawing/path_drawing.dart';
+import '../theme/app_colors.dart';
+import '../models/body_area.dart';
+import '../models/body_outline_path.dart';
+
+/// Front-view body silhouette you tap to select an area — like a
+/// character-select screen. Left/right pairs (arms, hands, legs, feet)
+/// both resolve to the same BodyArea id, so the rest of the triage flow
+/// never needs to know which side was tapped.
+///
+/// The base visual is a real illustrated silhouette (assets/icons/
+/// body_map/body_silhouette.png). Highlights are built two ways:
+///  - scalp/face/neck/torso/arms/feet: cut from the single accurate
+///    traced whole-body outline (see body_outline_path.dart) by
+///    intersecting it with a generous bounding rect. Because several
+///    of these regions are PHYSICALLY CONNECTED in the artwork (arms
+///    touch the torso with no gap near the shoulder), a plain
+///    intersection alone can bleed across that seam — so each region
+///    can also declare "exclude" rects, subtracted afterward, to
+///    surgically remove a connected neighbor's territory.
+///  - hands/legs: pre-traced standalone SVGs (already verified to
+///    align well independently — see assets/icons/body_map/).
+/// Tap detection uses its own, separate, deliberately generous set of
+/// rectangular regions — decoupled from the highlight visuals, since
+/// pixel-perfect hit boxes don't matter for UX the way shape does.
+class BodyMapSelector extends StatefulWidget {
+  final AppColors colors;
+  final String? selectedId;
+  final ValueChanged<String> onSelect;
+
+  const BodyMapSelector({
+    super.key,
+    required this.colors,
+    required this.selectedId,
+    required this.onSelect,
+  });
+
+  @override
+  State<BodyMapSelector> createState() => _BodyMapSelectorState();
+}
+
+class _BodyMapSelectorState extends State<BodyMapSelector> with SingleTickerProviderStateMixin {
+  static const String _baseAsset = 'assets/icons/body_map/body_silhouette.png';
+  static const double _aspect = 1633 / 600;
+  static const double _maxWidth = 260;
+
+  late final AnimationController _pulseController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1100),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  void _handleTap(Offset localPosition, Size canvasSize) {
+    final regions = _BodyRegions.forSize(canvasSize);
+    for (final id in _BodyRegions.hitTestOrder) {
+      for (final path in regions[id]!) {
+        if (path.contains(localPosition)) {
+          widget.onSelect(id);
+          return;
+        }
+      }
+    }
+  }
+
+  BodyArea? get _selectedArea {
+    for (final area in BodyArea.all) {
+      if (area.id == widget.selectedId) return area;
+    }
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = widget.colors;
+    final selectedArea = _selectedArea;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: colors.border),
+      ),
+      child: Column(
+        children: [
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final availableWidth = constraints.maxWidth.isFinite ? constraints.maxWidth : _maxWidth;
+              final width = availableWidth > _maxWidth ? _maxWidth : availableWidth;
+              final size = Size(width, width * _aspect);
+
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTapUp: (details) => _handleTap(details.localPosition, size),
+                child: SizedBox(
+                  width: size.width,
+                  height: size.height,
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: Image.asset(_baseAsset, fit: BoxFit.fill),
+                      ),
+                      if (widget.selectedId != null)
+                        AnimatedBuilder(
+                          animation: _pulseController,
+                          builder: (context, _) => _RegionHighlight(
+                            id: widget.selectedId!,
+                            size: size,
+                            colors: colors,
+                            pulse: _pulseController.value,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 16),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 180),
+            child: Container(
+              key: ValueKey(selectedArea?.id),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+              decoration: BoxDecoration(
+                color: selectedArea != null ? colors.accentSoft : colors.background,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: selectedArea != null ? colors.accent : colors.border,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (selectedArea != null) ...[
+                    SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: selectedArea.iconAsset != null
+                          ? SvgPicture.asset(
+                              selectedArea.iconAsset!,
+                              colorFilter: ColorFilter.mode(colors.accent, BlendMode.srcIn),
+                            )
+                          : Icon(selectedArea.icon, size: 16, color: colors.accent),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  Text(
+                    selectedArea?.label ?? 'Tap a body area to select it',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: selectedArea != null ? colors.accent : colors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Parses and transforms the traced whole-body outline once, caching
+/// the result per canvas size. This is the ground-truth shape every
+/// intersected region is cut from.
+class _WholeBodyOutline {
+  _WholeBodyOutline._();
+
+  static Path? _rawPath;
+  static Path get _raw => _rawPath ??= parseSvgPathData(bodyOutlinePathData);
+
+  static Size? _cachedSize;
+  static Path? _cachedTransformed;
+
+  static Path forSize(Size size) {
+    if (_cachedTransformed != null && _cachedSize == size) return _cachedTransformed!;
+
+    // potrace raw units -> true 1080x2940 pixel space:
+    // pixel_x = raw_x * 0.1, pixel_y = 2940 - raw_y * 0.1
+    final toPixels = Float64List.fromList([
+      0.1, 0, 0, 0, //
+      0, -0.1, 0, 0, //
+      0, 0, 1, 0, //
+      0, 2940, 0, 1, //
+    ]);
+    var path = _raw.transform(toPixels);
+
+    // 1080x2940 design space -> actual rendered canvas size.
+    final scale = size.width / 1080.0;
+    final toCanvas = Float64List.fromList([
+      scale, 0, 0, 0, //
+      0, scale, 0, 0, //
+      0, 0, 1, 0, //
+      0, 0, 0, 1, //
+    ]);
+    path = path.transform(toCanvas);
+
+    _cachedSize = size;
+    _cachedTransformed = path;
+    return path;
+  }
+
+  static Path _rectPath(Size size, List<double> r) {
+    return Path()
+      ..addRect(Rect.fromLTWH(
+        r[0] * size.width,
+        r[1] * size.height,
+        r[2] * size.width,
+        r[3] * size.height,
+      ));
+  }
+
+  /// The true silhouette shape for [def]: union of its include rects,
+  /// intersected with the whole-body outline, minus its exclude rects.
+  /// Generous/imprecise include rects are fine — the outline naturally
+  /// hugs the real edge. Exclude rects handle the case where a region
+  /// is physically connected to a neighbor in the artwork (e.g. arm
+  /// touching torso at the shoulder) and would otherwise bleed across.
+  static Path clipRegion(Size size, _OutlineRegionDef def) {
+    Path includeUnion = Path();
+    for (final r in def.include) {
+      includeUnion = Path.combine(PathOperation.union, includeUnion, _rectPath(size, r));
+    }
+
+    Path result = Path.combine(PathOperation.intersect, forSize(size), includeUnion);
+
+    for (final r in def.exclude) {
+      result = Path.combine(PathOperation.difference, result, _rectPath(size, r));
+    }
+
+    return result;
+  }
+}
+
+/// One positioned standalone SVG trace, for regions not derived from
+/// the whole-body outline (see class doc above for why).
+class _RegionVisual {
+  final String asset;
+  final double left, top, width, height;
+  const _RegionVisual({
+    required this.asset,
+    required this.left,
+    required this.top,
+    required this.width,
+    required this.height,
+  });
+}
+
+const _svgRegionVisuals = <String, List<_RegionVisual>>{
+  'hands': [
+    _RegionVisual(asset: 'assets/icons/body_map/hand_left.svg', left: 0.0, top: 0.4701, width: 0.1898, height: 0.0949),
+    _RegionVisual(asset: 'assets/icons/body_map/hand_right.svg', left: 0.8102, top: 0.4701, width: 0.1898, height: 0.0949),
+  ],
+  'legs': [
+    _RegionVisual(asset: 'assets/icons/body_map/leg_left.svg', left: 0.2704, top: 0.5350, width: 0.175, height: 0.3599),
+    _RegionVisual(asset: 'assets/icons/body_map/leg_right.svg', left: 0.5546, top: 0.5350, width: 0.175, height: 0.3599),
+  ],
+};
+
+/// A region derived from the whole-body outline: [include] rects are
+/// unioned then intersected with the true outline; [exclude] rects are
+/// subtracted afterward to strip out a connected neighbor's territory.
+/// All values are [left, top, width, height] fractions of canvas size.
+class _OutlineRegionDef {
+  final List<List<double>> include;
+  final List<List<double>> exclude;
+  const _OutlineRegionDef({required this.include, this.exclude = const []});
+}
+
+// Shared arm zone used as 'arms' own include rect.
+const _armZoneLeft = [0.0, 0.09, 0.20, 0.39];
+const _armZoneRight = [0.80, 0.09, 0.20, 0.39];
+
+// Torso's exclude needs to reach further down than arms' own zone —
+// otherwise the bit where the wrist/hand overlaps torso's rect (below
+// where the arm-only zone ends) still bleeds through.
+const _armExclusionForTorsoLeft = [0.0, 0.09, 0.20, 0.48];
+const _armExclusionForTorsoRight = [0.80, 0.09, 0.20, 0.48];
+
+const _outlineRegions = <String, _OutlineRegionDef>{
+  'scalp': _OutlineRegionDef(include: [[0.34, 0.0, 0.32, 0.06]]),
+  'face': _OutlineRegionDef(include: [[0.32, 0.0, 0.36, 0.10]]),
+  'neck': _OutlineRegionDef(include: [[0.40, 0.08, 0.20, 0.05]]),
+  'torso': _OutlineRegionDef(
+    include: [[0.10, 0.13, 0.80, 0.42]],
+    exclude: [_armExclusionForTorsoLeft, _armExclusionForTorsoRight],
+  ),
+  'arms': _OutlineRegionDef(include: [_armZoneLeft, _armZoneRight]),
+  'feet': _OutlineRegionDef(include: [
+    [0.13, 0.86, 0.30, 0.14],
+    [0.57, 0.86, 0.30, 0.14],
+  ]),
+};
+
+/// Renders the highlight for whichever region is currently selected.
+class _RegionHighlight extends StatelessWidget {
+  final String id;
+  final Size size;
+  final AppColors colors;
+  final double pulse;
+
+  const _RegionHighlight({
+    required this.id,
+    required this.size,
+    required this.colors,
+    required this.pulse,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final fillAlpha = 0.55 + 0.30 * pulse;
+
+    final svgVisuals = _svgRegionVisuals[id];
+    if (svgVisuals != null) {
+      return Stack(
+        children: [
+          for (final v in svgVisuals)
+            Positioned(
+              left: v.left * size.width,
+              top: v.top * size.height,
+              width: v.width * size.width,
+              height: v.height * size.height,
+              child: SvgPicture.asset(
+                v.asset,
+                fit: BoxFit.fill,
+                colorFilter: ColorFilter.mode(colors.accent.withValues(alpha: fillAlpha), BlendMode.srcIn),
+              ),
+            ),
+        ],
+      );
+    }
+
+    final def = _outlineRegions[id];
+    if (def != null) {
+      return CustomPaint(
+        size: size,
+        painter: _OutlineHighlightPainter(
+          def: def,
+          size: size,
+          color: colors.accent,
+          fillAlpha: fillAlpha,
+        ),
+      );
+    }
+
+    return const SizedBox.shrink();
+  }
+}
+
+class _OutlineHighlightPainter extends CustomPainter {
+  final _OutlineRegionDef def;
+  final Size size;
+  final Color color;
+  final double fillAlpha;
+
+  _OutlineHighlightPainter({
+    required this.def,
+    required this.size,
+    required this.color,
+    required this.fillAlpha,
+  });
+
+  @override
+  void paint(Canvas canvas, Size canvasSize) {
+    final shape = _WholeBodyOutline.clipRegion(size, def);
+
+    final fillPaint = Paint()
+      ..style = PaintingStyle.fill
+      ..color = color.withValues(alpha: fillAlpha);
+    final strokePaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0
+      ..color = color.withValues(alpha: (fillAlpha + 0.15).clamp(0.0, 1.0));
+
+    canvas.drawPath(shape, fillPaint);
+    canvas.drawPath(shape, strokePaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _OutlineHighlightPainter oldDelegate) =>
+      oldDelegate.def != def || oldDelegate.fillAlpha != fillAlpha || oldDelegate.size != size;
+}
+
+/// Region geometry for TAP DETECTION ONLY — deliberately generous and
+/// simple, independent of the highlight-shape logic above.
+class _BodyRegions {
+  _BodyRegions._();
+
+  static Size? _cachedSize;
+  static Map<String, List<Path>>? _cache;
+
+  static Map<String, List<Path>> forSize(Size size) {
+    if (_cache != null && _cachedSize == size) return _cache!;
+    _cachedSize = size;
+    _cache = _build(size);
+    return _cache!;
+  }
+
+  static const hitTestOrder = ['scalp', 'hands', 'feet', 'face', 'neck', 'arms', 'legs', 'torso'];
+
+  static Map<String, List<Path>> _build(Size s) {
+    Rect fr(double l, double t, double r, double b) =>
+        Rect.fromLTRB(l * s.width, t * s.height, r * s.width, b * s.height);
+
+    final scalp = Path()..addOval(fr(0.32, 0.0, 0.68, 0.075));
+    final face = Path()..addOval(fr(0.30, 0.0, 0.70, 0.115));
+    final neck = Path()..addRect(fr(0.38, 0.06, 0.62, 0.12));
+    final torso = Path()
+      ..moveTo(0.14 * s.width, 0.09 * s.height)
+      ..lineTo(0.86 * s.width, 0.09 * s.height)
+      ..lineTo(0.685 * s.width, 0.55 * s.height)
+      ..lineTo(0.315 * s.width, 0.55 * s.height)
+      ..close();
+    final leftArm = Path()
+      ..addRRect(RRect.fromRectAndRadius(fr(0.0, 0.09, 0.20, 0.49), Radius.circular(s.width * 0.06)));
+    final rightArm = Path()
+      ..addRRect(RRect.fromRectAndRadius(fr(0.80, 0.09, 1.0, 0.49), Radius.circular(s.width * 0.06)));
+    final leftHand = Path()..addOval(fr(0.0, 0.47, 0.19, 0.565));
+    final rightHand = Path()..addOval(fr(0.81, 0.47, 1.0, 0.565));
+    final leftLeg = Path()
+      ..addRRect(RRect.fromRectAndRadius(fr(0.27, 0.535, 0.445, 0.895), Radius.circular(s.width * 0.07)));
+    final rightLeg = Path()
+      ..addRRect(RRect.fromRectAndRadius(fr(0.555, 0.535, 0.73, 0.895), Radius.circular(s.width * 0.07)));
+    final leftFoot = Path()..addOval(fr(0.13, 0.86, 0.43, 1.0));
+    final rightFoot = Path()..addOval(fr(0.57, 0.86, 0.87, 1.0));
+
+    return {
+      'scalp': [scalp],
+      'face': [face],
+      'neck': [neck],
+      'torso': [torso],
+      'arms': [leftArm, rightArm],
+      'hands': [leftHand, rightHand],
+      'legs': [leftLeg, rightLeg],
+      'feet': [leftFoot, rightFoot],
+    };
+  }
+}
+</file>
+
+<file path="lib/widgets/custom_bottom_nav.dart">
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../theme/theme_provider.dart';
+import '../theme/app_colors.dart';
+
+/// Sticky bottom navigation bar with 4 text-based destinations and a
+/// central, oversized circular scan button that floats above the bar
+/// and subtly scales down on press — modeled after GCash's home tab.
+class CustomBottomNav extends StatefulWidget {
+  final int currentIndex;
+  final ValueChanged<int> onTap;
+  final VoidCallback onScanTap;
+
+  const CustomBottomNav({
+    super.key,
+    required this.currentIndex,
+    required this.onTap,
+    required this.onScanTap,
+  });
+
+  @override
+  State<CustomBottomNav> createState() => _CustomBottomNavState();
+}
+
+class _CustomBottomNavState extends State<CustomBottomNav> {
+  bool _pressed = false;
+
+  static const _labels = ['Home', 'Triage', 'Logs', 'Account'];
+  static const _icons = [
+    Icons.home_rounded,
+    Icons.health_and_safety_outlined,
+    Icons.receipt_long_outlined,
+    Icons.person_outline_rounded,
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.watch<ThemeProvider>().colors;
+
+    return SizedBox(
+      height: 96,
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.topCenter,
+        children: [
+          // The bar itself
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Container(
+              height: 76,
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              decoration: BoxDecoration(
+                color: colors.surface,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 24,
+                    offset: const Offset(0, -6),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  _navItem(0, colors),
+                  _navItem(1, colors),
+                  const SizedBox(width: 76), // reserved gap for the FAB
+                  _navItem(2, colors),
+                  _navItem(3, colors),
+                ],
+              ),
+            ),
+          ),
+          // Floating central scan button
+          Positioned(
+            top: 0,
+            child: GestureDetector(
+              onTapDown: (_) => setState(() => _pressed = true),
+              onTapUp: (_) => setState(() => _pressed = false),
+              onTapCancel: () => setState(() => _pressed = false),
+              onTap: widget.onScanTap,
+              child: AnimatedScale(
+                scale: _pressed ? 0.92 : 1.0,
+                duration: const Duration(milliseconds: 120),
+                curve: Curves.easeOut,
+                child: Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [colors.accent, colors.accent.withValues(alpha: 0.75)],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: colors.accent.withValues(alpha: 0.45),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                    border: Border.all(color: colors.background, width: 4),
+                  ),
+                  child: const Icon(
+                    Icons.camera_alt_rounded,
+                    color: Colors.white,
+                    size: 30,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _navItem(int index, AppColors colors) {
+    final selected = widget.currentIndex == index;
+    final color = selected ? colors.accent : colors.textSecondary;
+    return Expanded(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => widget.onTap(index),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(_icons[index], size: 22, color: color),
+              const SizedBox(height: 4),
+              Text(
+                _labels[index],
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+</file>
+
+<file path="lib/widgets/dashboard_header.dart">
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../theme/theme_provider.dart';
+import '../theme/app_colors.dart';
+
+class DashboardHeader extends StatelessWidget {
+  const DashboardHeader({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final themeProvider = context.watch<ThemeProvider>();
+    final colors = themeProvider.colors;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _greetingForNow(),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: colors.textSecondary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  "Let's check your skin",
+                  style: TextStyle(
+                    fontSize: 21,
+                    color: colors.textPrimary,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          _ThemeToggle(themeProvider: themeProvider, colors: colors),
+          const SizedBox(width: 12),
+          _Avatar(colors: colors),
+        ],
+      ),
+    );
+  }
+
+  String _greetingForNow() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
+  }
+}
+
+class _ThemeToggle extends StatelessWidget {
+  final ThemeProvider themeProvider;
+  final AppColors colors;
+  const _ThemeToggle({required this.themeProvider, required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(20),
+      onTap: themeProvider.toggleTheme,
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: colors.accentSoft,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(
+          themeProvider.isDarkMode
+              ? Icons.dark_mode_rounded
+              : Icons.light_mode_rounded,
+          color: colors.accent,
+          size: 20,
+        ),
+      ),
+    );
+  }
+}
+
+class _Avatar extends StatelessWidget {
+  final AppColors colors;
+  const _Avatar({required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          colors: [colors.accent, colors.accent.withValues(alpha: 0.6)],
+        ),
+        border: Border.all(color: colors.surface, width: 2),
+      ),
+      child: const Icon(Icons.person_rounded, color: Colors.white, size: 22),
+    );
+  }
+}
+</file>
+
+<file path="lib/widgets/education_carousel.dart">
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../theme/theme_provider.dart';
+import '../theme/app_colors.dart';
+import '../models/education_topic.dart';
+
+class EducationCarousel extends StatelessWidget {
+  const EducationCarousel({super.key});
+
+  static const _topics = [
+    EducationTopic(
+      title: 'Acne Vulgaris',
+      subtitle: 'Causes, triggers & care',
+      icon: Icons.face_retouching_natural_rounded,
+      tint: Color(0xFF0D9488),
+    ),
+    EducationTopic(
+      title: 'Melanoma Skin Cancer',
+      subtitle: 'Know the ABCDE signs',
+      icon: Icons.warning_amber_rounded,
+      tint: Color(0xFFDC2626),
+    ),
+    EducationTopic(
+      title: 'Eczema (Dermatitis)',
+      subtitle: 'Manage flare-ups',
+      icon: Icons.water_drop_outlined,
+      tint: Color(0xFF2563EB),
+    ),
+    EducationTopic(
+      title: 'Psoriasis',
+      subtitle: 'Understand the cycle',
+      icon: Icons.grain_rounded,
+      tint: Color(0xFF9333EA),
+    ),
+    EducationTopic(
+      title: 'Scalp Dermatitis',
+      subtitle: 'Flaking & itch relief',
+      icon: Icons.spa_outlined,
+      tint: Color(0xFFD97706),
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.watch<ThemeProvider>().colors;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Learn About Conditions',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: colors.textPrimary,
+                  ),
+                ),
+                Text(
+                  'See all',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: colors.accent,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 148,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              itemCount: _topics.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              itemBuilder: (context, index) =>
+                  _EducationCard(topic: _topics[index], colors: colors),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EducationCard extends StatelessWidget {
+  final EducationTopic topic;
+  final AppColors colors;
+
+  const _EducationCard({required this.topic, required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 168,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: colors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: topic.tint.withOpacity(0.14),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(topic.icon, color: topic.tint, size: 20),
+          ),
+          const Spacer(),
+          Text(
+            topic.title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 13.5,
+              fontWeight: FontWeight.w700,
+              color: colors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            topic.subtitle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 11, color: colors.textSecondary),
+          ),
+        ],
+      ),
+    );
+  }
+}
+</file>
+
+<file path="lib/widgets/high_risk_banner.dart">
+import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
+
+class HighRiskBanner extends StatelessWidget {
+  final AppColors colors;
+  final VoidCallback onViewClinics;
+  final VoidCallback onDismiss;
+
+  const HighRiskBanner({
+    super.key,
+    required this.colors,
+    required this.onViewClinics,
+    required this.onDismiss,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colors.danger.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: colors.danger.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: colors.danger.withValues(alpha: 0.16),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.priority_high_rounded, color: colors.danger, size: 22),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'High-risk result detected',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13.5,
+                    color: colors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'We recommend seeing a dermatologist soon.',
+                  style: TextStyle(fontSize: 11.5, color: colors.textSecondary),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    GestureDetector(
+                      onTap: onViewClinics,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: colors.danger,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Text(
+                          'Find Nearby Clinics',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    GestureDetector(
+                      onTap: onDismiss,
+                      child: Text(
+                        'Dismiss',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: colors.textSecondary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+</file>
+
+<file path="lib/widgets/metrics_banner.dart">
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../theme/theme_provider.dart';
+import '../theme/app_colors.dart';
+
+class MetricsBanner extends StatelessWidget {
+  const MetricsBanner({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.watch<ThemeProvider>().colors;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: _MetricCard(
+              colors: colors,
+              label: 'Scans Done',
+              value: '12',
+              icon: Icons.check_circle_outline_rounded,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _MetricCard(
+              colors: colors,
+              label: 'This Week',
+              value: '3',
+              icon: Icons.calendar_today_outlined,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _MetricCard(
+              colors: colors,
+              label: 'Alerts',
+              value: '1',
+              icon: Icons.notifications_active_outlined,
+              highlight: true,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MetricCard extends StatelessWidget {
+  final AppColors colors;
+  final String label;
+  final String value;
+  final IconData icon;
+  final bool highlight;
+
+  const _MetricCard({
+    required this.colors,
+    required this.label,
+    required this.value,
+    required this.icon,
+    this.highlight = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: colors.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 18, color: highlight ? colors.danger : colors.accent),
+          const SizedBox(height: 10),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: colors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11.5,
+              color: colors.textSecondary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+</file>
+
+<file path="lib/widgets/quick_link_tile.dart">
+import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
+
+/// Horizontal quick-link tile: icon badge, title + subtitle, chevron.
+/// Used on the Home Dashboard to surface Pathology Triage, Clinical
+/// Logs, and the AI chatbot as one-tap destinations.
+class QuickLinkTile extends StatelessWidget {
+  final AppColors colors;
+  final IconData icon;
+  final Color tint;
+  final String title;
+  final String subtitle;
+  final String? trailingBadge;
+  final VoidCallback onTap;
+
+  const QuickLinkTile({
+    super.key,
+    required this.colors,
+    required this.icon,
+    required this.tint,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+    this.trailingBadge,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: colors.surface,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: colors.border),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: tint,
+                  borderRadius: BorderRadius.circular(13),
+                  boxShadow: [
+                    BoxShadow(color: tint.withValues(alpha: 0.35), blurRadius: 10, offset: const Offset(0, 4)),
+                  ],
+                ),
+                child: Icon(icon, color: Colors.white, size: 21),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 11.5, color: colors.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+              if (trailingBadge != null) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: tint.withValues(alpha: 0.14),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    trailingBadge!,
+                    style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: tint),
+                  ),
+                ),
+                const SizedBox(width: 6),
+              ],
+              Icon(Icons.chevron_right_rounded, color: colors.textSecondary),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+</file>
+
+<file path="lib/widgets/scan_action_sheet.dart">
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../theme/theme_provider.dart';
+import '../theme/app_colors.dart';
+
+/// Overlay menu presented when the central scan button is tapped.
+/// Offers the 3 required routes: live camera, library upload, or
+/// jumping straight to past scan history.
+class ScanActionSheet extends StatelessWidget {
+  final VoidCallback onViewHistory;
+
+  const ScanActionSheet({super.key, required this.onViewHistory});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.watch<ThemeProvider>().colors;
+
+    return SafeArea(
+      child: Container(
+        margin: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+        decoration: BoxDecoration(
+          color: colors.surface,
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.18),
+              blurRadius: 30,
+              offset: const Offset(0, 12),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(
+                color: colors.border,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'New Skin Scan',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: colors.textPrimary,
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Choose how you want to analyze your skin',
+                style: TextStyle(fontSize: 13, color: colors.textSecondary),
+              ),
+            ),
+            const SizedBox(height: 20),
+            _Option(
+              colors: colors,
+              icon: Icons.camera_alt_rounded,
+              label: 'Take Live Photo',
+              subtitle: 'Use your camera for a real-time scan',
+              onTap: () => Navigator.pop(context),
+            ),
+            const SizedBox(height: 12),
+            _Option(
+              colors: colors,
+              icon: Icons.photo_library_rounded,
+              label: 'Upload from Device Library',
+              subtitle: 'Choose an existing photo',
+              onTap: () => Navigator.pop(context),
+            ),
+            const SizedBox(height: 12),
+            _Option(
+              colors: colors,
+              icon: Icons.history_rounded,
+              label: 'View Past Scan History',
+              subtitle: 'Track how a spot has changed over time',
+              onTap: onViewHistory,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Option extends StatelessWidget {
+  final AppColors colors;
+  final IconData icon;
+  final String label;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _Option({
+    required this.colors,
+    required this.icon,
+    required this.label,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: colors.background,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: colors.accent, width: 1.6),
+                ),
+                child: Icon(icon, color: colors.accent, size: 20),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w600,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(fontSize: 12, color: colors.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded, color: colors.textSecondary),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+</file>
+
+<file path="lib/widgets/score_hero_card.dart">
+import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
+import 'sparkline_chart.dart';
+
+/// Full-width gradient hero card showing a headline score, modeled after
+/// the "Asklepios Score" pattern — a big number the user can read at a
+/// glance, with a status pill and an optional trend strip underneath.
+class ScoreHeroCard extends StatelessWidget {
+  final AppColors colors;
+  final String statusLabel;
+  final String scoreValue;
+  final String scoreUnit;
+  final String subtitle;
+  final List<double>? trend;
+  final VoidCallback? onTap;
+  final Color? overrideColor; // lets Triage results tint red/amber for risk
+
+  const ScoreHeroCard({
+    super.key,
+    required this.colors,
+    required this.statusLabel,
+    required this.scoreValue,
+    required this.subtitle,
+    this.scoreUnit = '',
+    this.trend,
+    this.onTap,
+    this.overrideColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final base = overrideColor ?? colors.accent;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(28),
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(28),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [base, Color.lerp(base, Colors.black, 0.35)!],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: base.withValues(alpha: 0.35),
+              blurRadius: 24,
+              offset: const Offset(0, 12),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                statusLabel,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
+              children: [
+                Text(
+                  scoreValue,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 44,
+                    fontWeight: FontWeight.w800,
+                    height: 1,
+                  ),
+                ),
+                if (scoreUnit.isNotEmpty) ...[
+                  const SizedBox(width: 6),
+                  Text(
+                    scoreUnit,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.85),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 12.5),
+            ),
+            if (trend != null && trend!.length > 1) ...[
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 44,
+                width: double.infinity,
+                child: SparklineChart(
+                  values: trend!,
+                  lineColor: Colors.white,
+                  fillColor: Colors.white,
+                  strokeWidth: 2,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+</file>
+
+<file path="lib/widgets/sparkline_chart.dart">
+import 'package:flutter/material.dart';
+
+/// Smooth filled line chart — used for the hero score card and the
+/// clinical log detail trend, mirroring the wave-style charts in the
+/// reference kit (Heart Rate / Weight cards).
+class SparklineChart extends StatelessWidget {
+  final List<double> values; // expected roughly 0.0 - 1.0, but any range works
+  final Color lineColor;
+  final Color fillColor;
+  final double strokeWidth;
+
+  const SparklineChart({
+    super.key,
+    required this.values,
+    required this.lineColor,
+    required this.fillColor,
+    this.strokeWidth = 2.5,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      painter: _SparklinePainter(
+        values: values,
+        lineColor: lineColor,
+        fillColor: fillColor,
+        strokeWidth: strokeWidth,
+      ),
+      child: const SizedBox.expand(),
+    );
+  }
+}
+
+class _SparklinePainter extends CustomPainter {
+  final List<double> values;
+  final Color lineColor;
+  final Color fillColor;
+  final double strokeWidth;
+
+  _SparklinePainter({
+    required this.values,
+    required this.lineColor,
+    required this.fillColor,
+    required this.strokeWidth,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (values.length < 2) return;
+
+    final minV = values.reduce((a, b) => a < b ? a : b);
+    final maxV = values.reduce((a, b) => a > b ? a : b);
+    final range = (maxV - minV).abs() < 0.001 ? 1.0 : (maxV - minV);
+
+    final dx = size.width / (values.length - 1);
+    final points = <Offset>[
+      for (int i = 0; i < values.length; i++)
+        Offset(
+          i * dx,
+          size.height - ((values[i] - minV) / range) * size.height * 0.85 - size.height * 0.05,
+        ),
+    ];
+
+    final linePath = Path()..moveTo(points.first.dx, points.first.dy);
+    for (int i = 0; i < points.length - 1; i++) {
+      final current = points[i];
+      final next = points[i + 1];
+      final mid = Offset((current.dx + next.dx) / 2, (current.dy + next.dy) / 2);
+      linePath.quadraticBezierTo(current.dx, current.dy, mid.dx, mid.dy);
+    }
+    linePath.lineTo(points.last.dx, points.last.dy);
+
+    final fillPath = Path.from(linePath)
+      ..lineTo(points.last.dx, size.height)
+      ..lineTo(points.first.dx, size.height)
+      ..close();
+
+    canvas.drawPath(
+      fillPath,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [fillColor.withValues(alpha: 0.35), fillColor.withValues(alpha: 0.0)],
+        ).createShader(Rect.fromLTWH(0, 0, size.width, size.height)),
+    );
+
+    canvas.drawPath(
+      linePath,
+      Paint()
+        ..color = lineColor
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth
+        ..strokeCap = StrokeCap.round,
+    );
+
+    canvas.drawCircle(points.last, strokeWidth + 1.5, Paint()..color = lineColor);
+  }
+
+  @override
+  bool shouldRepaint(covariant _SparklinePainter oldDelegate) =>
+      oldDelegate.values != values || oldDelegate.lineColor != lineColor;
+}
+
+/// Small rounded bar chart — used for weekly-activity style summaries.
+class MiniBarChart extends StatelessWidget {
+  final List<double> values; // 0.0 - 1.0
+  final List<String> labels;
+  final Color barColor;
+  final Color trackColor;
+  final int highlightIndex;
+
+  const MiniBarChart({
+    super.key,
+    required this.values,
+    required this.labels,
+    required this.barColor,
+    required this.trackColor,
+    this.highlightIndex = -1,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        for (int i = 0; i < values.length; i++)
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 3),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    height: 56,
+                    child: Align(
+                      alignment: Alignment.bottomCenter,
+                      child: FractionallySizedBox(
+                        heightFactor: values[i].clamp(0.05, 1.0),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: i == highlightIndex ? barColor : trackColor,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    labels[i],
+                    style: TextStyle(
+                      fontSize: 9.5,
+                      fontWeight: i == highlightIndex ? FontWeight.w700 : FontWeight.w500,
+                      color: i == highlightIndex ? barColor : trackColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+</file>
+
+<file path="lib/main.dart">
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'theme/theme_provider.dart';
+import 'theme/app_colors.dart';
+import 'screens/main_shell.dart';
+
+void main() {
+  runApp(const IntegriScanApp());
+}
+
+class IntegriScanApp extends StatelessWidget {
+  const IntegriScanApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => ThemeProvider(),
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, _) {
+          return MaterialApp(
+            title: 'IntegriScan',
+            debugShowCheckedModeBanner: false,
+            themeMode:
+                themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+            theme: ThemeData(
+              brightness: Brightness.light,
+              scaffoldBackgroundColor: AppColors.light.background,
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: AppColors.light.accent,
+                brightness: Brightness.light,
+              ),
+              splashFactory: InkRipple.splashFactory,
+            ),
+            darkTheme: ThemeData(
+              brightness: Brightness.dark,
+              scaffoldBackgroundColor: AppColors.dark.background,
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: AppColors.dark.accent,
+                brightness: Brightness.dark,
+              ),
+              splashFactory: InkRipple.splashFactory,
+            ),
+            home: const MainShell(),
+          );
+        },
+      ),
+    );
+  }
+}
+</file>
+
+</files>
