@@ -152,4 +152,5 @@ IntegriScan is like having a knowledgeable friend who:
 
 *IntegriScan is designed to empower you with better awareness of your skin health. By making tracking simple, private, and intuitive, we hope to help you catch changes earlier and have more productive conversations with healthcare providers when needed.*
 
-*Last updated: August 2026*
+*Last updated: August 2026*#   I n t e g r i S c a n  
+ 
