@@ -1,20 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/spacing.dart';
-
-class AiSuggestion {
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final Color tint;
-
-  const AiSuggestion({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.tint,
-  });
-}
+import '../models/display_item.dart';
 
 /// Card containing a short list of AI-generated suggestions, each shown
 /// as a slim accent bar + bare icon + title/detail — an editorial "feed"
@@ -23,7 +10,7 @@ class AiSuggestion {
 class AiSuggestionCard extends StatelessWidget {
   final AppColors colors;
   final String title;
-  final List<AiSuggestion> suggestions;
+  final List<DisplayItem> suggestions;
 
   const AiSuggestionCard({
     super.key,
@@ -76,7 +63,7 @@ class AiSuggestionCard extends StatelessWidget {
 
 class _SuggestionRow extends StatelessWidget {
   final AppColors colors;
-  final AiSuggestion suggestion;
+  final DisplayItem suggestion;
 
   const _SuggestionRow({required this.colors, required this.suggestion});
 

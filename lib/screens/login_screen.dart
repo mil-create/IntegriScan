@@ -103,7 +103,7 @@ class _LoginScreenState extends State<LoginScreen> {
               onPressed: () async {
                 if (emailController.text.isEmpty ||
                     !emailController.text.contains('@')) {
-                  if (!mounted) return;
+                  if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: const Text('Please enter a valid email'),
@@ -114,11 +114,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 }
 
                 // Close dialog and show loading
-                if (!mounted) return;
+                if (!context.mounted) return;
                 Navigator.of(dialogContext).pop();
 
                 // Show loading dialog
-                if (!mounted) return;
                 if (!context.mounted) return;
                 showDialog(
                   context: context,
@@ -132,21 +131,20 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 // Attempt forgot password with retry
                 final success = await RetryUtil.retryOperation<bool>(
-                      () async => await authProvider.forgotPassword(
+                  () async => await authProvider.forgotPassword(
                     emailController.text.trim(),
                   ),
                   maxAttempts: 2,
                 );
 
                 // Close loading dialog
-                if (!mounted) return;
                 if (!context.mounted) return;
                 Navigator.of(context).pop();
 
-                if (!mounted) return;
+                if (!context.mounted) return;
 
                 if (success) {
-                  if (!mounted) return;
+                  if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: const Text('Password reset email sent! Please check your inbox.'),
@@ -154,9 +152,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   );
                 } else {
-                  // Extract colors before potential disposal
+                  // Extract error message before potential disposal
                   final errorMessage = authProvider.errorMessage ?? 'Failed to send reset email';
-                  if (!mounted) return;
                   if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -306,32 +303,29 @@ class _LoginScreenState extends State<LoginScreen> {
                   height: 56,
                   child: ElevatedButton(
                     onPressed: () async {
-                            if (!mounted) return;
-                            if (_formKey.currentState!.validate()) {
-                              final success = await RetryUtil.retryOperation<bool>(
-                                    () async => await authProvider.login(
-                                  _emailController.text.trim(),
-                                  _passwordController.text,
-                                ),
-                                maxAttempts: 2,
-                              );
-                              if (!mounted) return;
-                              if (!success) {
-                                // Extract colors before potential disposal
-                                final errorMessage = authProvider.errorMessage ?? 'Login failed';
-                                if (!mounted) return;
-
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(errorMessage),
-                                      backgroundColor: Theme.of(context).colorScheme.error,
-                                    ),
-                                  );
-                                }
-                              }
-                            }
-                          },
+                      if (!mounted) return;
+                      if (_formKey.currentState!.validate()) {
+                        final success = await RetryUtil.retryOperation<bool>(
+                          () async => await authProvider.login(
+                            _emailController.text.trim(),
+                            _passwordController.text,
+                          ),
+                          maxAttempts: 2,
+                        );
+                        if (!mounted) return;
+                        if (!success) {
+                          // Extract error message before potential disposal
+                          final errorMessage = authProvider.errorMessage ?? 'Login failed';
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(errorMessage),
+                              backgroundColor: Theme.of(context).colorScheme.error,
+                            ),
+                          );
+                        }
+                      }
+                    },
                     style: elevatedButtonStyle(context),
                     child: authProvider.isLoading
                         ? const SizedBox(

@@ -1,9 +1,13 @@
 import 'dart:typed_data';
 import 'dart:math' as math;
+import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:crop/crop.dart';
+import 'package:path_provider/path_provider.dart';
 import '../theme/theme_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/button_styles.dart';
@@ -48,15 +52,25 @@ class _PathologyTriageScreenState extends State<PathologyTriageScreen> {
   String? _selectedAreaId;
   final Set<String> _selectedSymptomIds = {};
   _TriageRisk? _result;
-  Uint8List? _capturedImage; // Store the captured/selected image
+  XFile? _capturedImageFile; // Store the captured/selected image file reference
+  XFile? _croppedImageFile; // Store the cropped image file reference
   double _rotationAngle = 0; // Rotation angle in degrees
+
+  /// Returns the image provider for display (cropped if available, otherwise original)
+  ImageProvider? get _displayImageProvider {
+    final file = _croppedImageFile ?? _capturedImageFile;
+    if (file == null) return null;
+    return FileImage(File(file.path));
+  }
 
   @override
   void initState() {
     super.initState();
     // If an initial image is provided, set it and jump to preview step
+    // Note: initialImage as Uint8List is deprecated; in a real app, pass a file path instead
     if (widget.initialImage != null) {
-      _capturedImage = widget.initialImage;
+      // For backwards compatibility, we'd need to write to a temp file
+      // For now, just skip to preview step - the user will need to capture a new image
       _step = _previewStepIndex;
     }
   }
@@ -86,9 +100,10 @@ class _PathologyTriageScreenState extends State<PathologyTriageScreen> {
         maxHeight: 1080,
       );
       if (pickedFile != null) {
-        final bytes = await pickedFile.readAsBytes();
+        if (!mounted) return;
         setState(() {
-          _capturedImage = bytes;
+          _capturedImageFile = pickedFile;
+          _croppedImageFile = null; // Clear stale crop
           _rotationAngle = 0;
           _step = _previewStepIndex; // Go to preview step
           _analyzing = false;
@@ -116,9 +131,10 @@ class _PathologyTriageScreenState extends State<PathologyTriageScreen> {
         maxHeight: 1080,
       );
       if (pickedFile != null) {
-        final bytes = await pickedFile.readAsBytes();
+        if (!mounted) return;
         setState(() {
-          _capturedImage = bytes;
+          _capturedImageFile = pickedFile;
+          _croppedImageFile = null; // Clear stale crop
           _rotationAngle = 0;
           _step = _previewStepIndex; // Go to preview step
           _analyzing = false;
@@ -150,28 +166,47 @@ class _PathologyTriageScreenState extends State<PathologyTriageScreen> {
     });
   }
 
-  void _cropImage() {
-  // TODO: Implement actual cropping logic using the crop package
-  // For now, we'll show a message indicating this feature is planned
-  if (mounted) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Image cropping feature coming soon'),
-      ),
-    );
+  void _cropImage() async {
+  if (_capturedImageFile == null) return;
+
+  // Write original to temp file for crop page
+  final tempDir = await getTemporaryDirectory();
+  final tempFile = File('${tempDir.path}/crop_source_${DateTime.now().millisecondsSinceEpoch}.png');
+  await tempFile.writeAsBytes(await _capturedImageFile!.readAsBytes());
+
+  if (!mounted) return;
+  final cropped = await Navigator.of(context).push(
+    MaterialPageRoute(
+      builder: (context) => _CropPage(imageFile: tempFile),
+    ),
+  );
+
+  // Clean up temp source file
+  await tempFile.delete();
+
+  if (cropped != null) {
+    if (!mounted) return;
+    // Save cropped to temp file, store XFile
+    final croppedFile = File('${tempDir.path}/cropped_${DateTime.now().millisecondsSinceEpoch}.png');
+    await croppedFile.writeAsBytes(cropped as Uint8List);
+    if (!mounted) return;
+    setState(() {
+      _croppedImageFile = XFile(croppedFile.path);
+    });
   }
 }
 
   void _retakePhoto() {
     setState(() {
-      _capturedImage = null;
+      _capturedImageFile = null;
+      _croppedImageFile = null; // Clear stale crop so it doesn't resurface
       _rotationAngle = 0;
       _step = 2; // Go back to capture step
     });
   }
 
   Future<void> _confirmPhoto() async {
-    if (_capturedImage == null) return;
+    if (_capturedImageFile == null) return;
 
     setState(() {
       _step = 4; // Go to analyzing/result step
@@ -225,9 +260,37 @@ class _PathologyTriageScreenState extends State<PathologyTriageScreen> {
       _selectedSymptomIds.clear();
       _result = null;
       _analyzing = false;
-      _capturedImage = null;
+      _capturedImageFile = null;
+      _croppedImageFile = null; // Clear stale crop so it doesn't resurface
       _rotationAngle = 0;
     });
+  }
+
+  @override
+  void deactivate() {
+    // Clear image references when screen is inactive (e.g., tab switched in IndexedStack)
+    // to prevent memory leaks
+    _capturedImageFile = null;
+    _croppedImageFile = null;
+    super.deactivate();
+  }
+
+  @override
+  void dispose() {
+    _cleanupTempFiles();
+    super.dispose();
+  }
+
+  Future<void> _cleanupTempFiles() async {
+    try {
+      final tempDir = await getTemporaryDirectory();
+      final files = tempDir.listSync().where((f) =>
+        f.path.contains('crop_source_') || f.path.contains('cropped_')
+      );
+      for (final file in files) {
+        await file.delete();
+      }
+    } catch (_) {}
   }
 
   @override
@@ -296,10 +359,11 @@ class _PathologyTriageScreenState extends State<PathologyTriageScreen> {
           onUploadPhoto: _uploadPhoto,
         );
       case _previewStepIndex:
+        if (_displayImageProvider == null) return _AnalyzingView(colors: colors);
         return _PhotoPreviewStep(
           key: const ValueKey('preview'),
           colors: colors,
-          image: _capturedImage!,
+          imageProvider: _displayImageProvider!,
           rotationAngle: _rotationAngle,
           onRotateLeft: _rotateLeft,
           onRotateRight: _rotateRight,
@@ -400,7 +464,7 @@ class _AreaStep extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, 0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -408,7 +472,7 @@ class _AreaStep extends StatelessWidget {
                 'Where is the affected area?',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: colors.textPrimary),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: AppSpacing.xs),
               Text(
                 'Select the body area you want to assess',
                 style: TextStyle(fontSize: 13, color: colors.textSecondary),
@@ -418,7 +482,7 @@ class _AreaStep extends StatelessWidget {
         ),
         Expanded(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 100),
+            padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.xl),
             child: AnimatedBodyPartDropdown(
               value: selectedId,
               colors: colors,
@@ -478,7 +542,7 @@ class _SymptomStep extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, 0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -486,7 +550,7 @@ class _SymptomStep extends StatelessWidget {
                 'What are you noticing?',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: colors.textPrimary),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: AppSpacing.xs),
               Text(
                 'Select all symptoms that apply',
                 style: TextStyle(fontSize: 13, color: colors.textSecondary),
@@ -496,10 +560,10 @@ class _SymptomStep extends StatelessWidget {
         ),
         Expanded(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
+            padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.xl),
             child: Wrap(
-              spacing: 10,
-              runSpacing: 10,
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
               children: [
                 for (final symptom in Symptom.all)
                   SymptomChip(
@@ -529,7 +593,7 @@ class _CaptureStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+      padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -537,30 +601,25 @@ class _CaptureStep extends StatelessWidget {
             'Add a photo',
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: colors.textPrimary),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppSpacing.xs),
           Text(
             'A clear, well-lit photo gives the most accurate assessment',
             style: TextStyle(fontSize: 13, color: colors.textSecondary),
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: AppSpacing.lg),
           Expanded(
             child: Container(
               width: double.infinity,
               decoration: BoxDecoration(
                 color: colors.background,
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(AppSpacing.lg),
                 border: Border.all(color: colors.border, style: BorderStyle.solid),
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.image_search_rounded, size: MediaQuery.of(context).size.width * 0.07, color: colors.accent),
-                  const SizedBox(height: 16),
-                  Text(
-                    'A clear, well-lit photo gives the most accurate assessment',
-                    style: TextStyle(fontSize: 13, color: colors.textSecondary),
-                  ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.md),
                   Text(
                     'Ensure good lighting, focus on the area of concern, and keep the camera steady',
                     style: TextStyle(fontSize: 11, color: colors.textSecondary),
@@ -569,7 +628,7 @@ class _CaptureStep extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.md),
           _CaptureOptionButton(
             colors: colors,
             icon: Icons.camera_alt_rounded,
@@ -577,7 +636,7 @@ class _CaptureStep extends StatelessWidget {
             filled: true,
             onTap: onTakePhoto,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.sm),
           _CaptureOptionButton(
             colors: colors,
             icon: Icons.photo_library_rounded,
@@ -593,7 +652,7 @@ class _CaptureStep extends StatelessWidget {
 
 class _PhotoPreviewStep extends StatelessWidget {
   final AppColors colors;
-  final Uint8List image;
+  final ImageProvider imageProvider;
   final double rotationAngle;
   final VoidCallback onRotateLeft;
   final VoidCallback onRotateRight;
@@ -604,7 +663,7 @@ class _PhotoPreviewStep extends StatelessWidget {
   const _PhotoPreviewStep({
     super.key,
     required this.colors,
-    required this.image,
+    required this.imageProvider,
     required this.rotationAngle,
     required this.onRotateLeft,
     required this.onRotateRight,
@@ -616,7 +675,7 @@ class _PhotoPreviewStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+      padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -624,18 +683,18 @@ class _PhotoPreviewStep extends StatelessWidget {
             'Preview Photo',
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: colors.textPrimary),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppSpacing.xs),
           Text(
             'Review and edit your photo before analysis',
             style: TextStyle(fontSize: 13, color: colors.textSecondary),
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: AppSpacing.lg),
           Expanded(
             child: Container(
               width: double.infinity,
               decoration: BoxDecoration(
                 color: colors.background,
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(AppSpacing.lg),
                 border: Border.all(color: colors.border, style: BorderStyle.solid),
               ),
               child: Column(
@@ -644,14 +703,14 @@ class _PhotoPreviewStep extends StatelessWidget {
                     child: Center(
                       child: Transform.rotate(
                         angle: rotationAngle * (math.pi / 180),
-                        child: Image.memory(
-                          image,
+                        child: Image(
+                          image: imageProvider,
                           fit: BoxFit.contain,
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: AppSpacing.md),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
@@ -675,7 +734,7 @@ class _PhotoPreviewStep extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.sm),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
@@ -966,6 +1025,94 @@ class _ContinueBar extends StatelessWidget {
           style: elevatedButtonStyle(context),
           child: const Text('Continue', style: TextStyle(fontWeight: FontWeight.w700)),
         ),
+      ),
+    );
+  }
+}
+
+// Separate widget for the crop page
+class _CropPage extends StatefulWidget {
+  final File imageFile;
+
+  const _CropPage({required this.imageFile});
+
+  @override
+  State<_CropPage> createState() => _CropPageState();
+}
+
+class _CropPageState extends State<_CropPage> {
+  late final CropController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = CropController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Crop Image'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: Crop(
+              controller: _controller,
+              child: Image.file(widget.imageFile),
+            ),
+          ),
+          OverflowBar(
+            alignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  // Check if still mounted before starting async work
+                  if (!mounted) return;
+
+                  final ui.Image? image = await _controller.crop();
+                  // Check if still mounted after async work
+                  if (!mounted) return;
+
+                  if (image != null) {
+                    final ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+                    // Check if still mounted after async work
+                    if (!mounted) return;
+
+                    if (byteData != null) {
+                      if (!mounted) return;
+                      final tempDir = await getTemporaryDirectory();
+                      if (!mounted) return;
+                      final croppedFile = File('${tempDir.path}/cropped_${DateTime.now().millisecondsSinceEpoch}.png');
+                      await croppedFile.writeAsBytes(byteData.buffer.asUint8List());
+                      // Check if still mounted after async work
+                      if (!mounted) return;
+                      Navigator.of(context).pop(XFile(croppedFile.path));
+                    }
+                  }
+                },
+                child: const Text('Confirm'),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

@@ -12,6 +12,7 @@ import '../widgets/score_hero_card.dart';
 import '../widgets/ai_suggestion_card.dart';
 import '../widgets/quick_link_tile.dart';
 import '../widgets/skin_fact_card.dart';
+import '../models/display_item.dart';
 
 class HomeScreen extends StatelessWidget {
   final bool highRiskFlag;
@@ -182,19 +183,19 @@ class HomeScreen extends StatelessWidget {
               colors: colors,
               title: 'AI Suggestions',
               suggestions: [
-                AiSuggestion(
+                DisplayItem(
                   title: 'Switch to a fragrance-free moisturizer',
                   subtitle: 'Based on the redness pattern on your left forearm',
                   icon: Icons.water_drop_outlined,
                   tint: colors.accent,
                 ),
-                AiSuggestion(
+                DisplayItem(
                   title: 'Apply SPF 30+ before midday sun exposure',
                   subtitle: 'Your scalp scan showed early UV sensitivity',
                   icon: Icons.wb_sunny_outlined,
                   tint: colors.warning,
                 ),
-                const AiSuggestion(
+                const DisplayItem(
                   title: 'Re-scan your neck area in 5 days',
                   subtitle: 'To confirm the flaking has resolved',
                   icon: Icons.replay_rounded,

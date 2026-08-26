@@ -54,12 +54,12 @@ class _AccountScreenState extends State<AccountScreen> {
         source: source,
         maxWidth: 1080,
         maxHeight: 1080,
+        imageQuality: 85,
       );
       if (pickedFile != null) {
-        // We don't need the bytes for anything in this demo, but we read it to confirm the image is valid
-        await pickedFile.readAsBytes();
-        // In a real app, you would upload this to a server and update the user's photoUrl
-        // For now, we'll just show a success message and note that this would be implemented
+        // ImagePicker with maxWidth/maxHeight/imageQuality already validates and compresses.
+        // No need to read full bytes into memory just to validate.
+        // In a real app, you would upload pickedFile.path to a server and update the user's photoUrl
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(

@@ -9,11 +9,18 @@ class AuthProvider extends ChangeNotifier {
   User? _user;
   bool _isLoading = false;
   String? _errorMessage;
+  bool _disposed = false;
 
   User? get user => _user;
   bool get isLoading => _isLoading;
   bool get isAuthenticated => _user != null;
   String? get errorMessage => _errorMessage;
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
 
   /// Simulates login with email and password.
   /// In a real app, this would call an authentication API.
@@ -161,23 +168,23 @@ class AuthProvider extends ChangeNotifier {
 
   void _setLoading(bool value) {
     _isLoading = value;
-    notifyListeners();
+    if (!_disposed) notifyListeners();
   }
 
   void _setError(String? message) {
     _errorMessage = message;
-    notifyListeners();
+    if (!_disposed) notifyListeners();
   }
 
   void _clearError() {
     _errorMessage = null;
-    notifyListeners();
+    if (!_disposed) notifyListeners();
   }
 
   /// Clears the current user and resets state.
   void clear() {
     _user = null;
     _errorMessage = null;
-    notifyListeners();
+    if (!_disposed) notifyListeners();
   }
 }

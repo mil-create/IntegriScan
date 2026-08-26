@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../theme/theme_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/spacing.dart';
-import '../models/education_topic.dart';
+import '../models/display_item.dart';
 
 class EducationCarousel extends StatefulWidget {
   const EducationCarousel({super.key});
@@ -18,32 +18,32 @@ class _EducationCarouselState extends State<EducationCarousel>
   late final AnimationController _controller;
   late final List<Animation<double>> _animations;
 
-  static const List<EducationTopic> _topics = [
-    EducationTopic(
+  static final List<DisplayItem> _topics = [
+    const DisplayItem(
       title: 'Acne Vulgaris',
       subtitle: 'Causes, triggers & care',
       icon: Icons.face_retouching_natural_rounded,
       tint: Color(0xFF0D9488),
     ),
-    EducationTopic(
+    const DisplayItem(
       title: 'Melanoma Skin Cancer',
       subtitle: 'Know the ABCDE signs',
       icon: Icons.warning_amber_rounded,
       tint: Color(0xFFDC2626),
     ),
-    EducationTopic(
+    const DisplayItem(
       title: 'Eczema (Dermatitis)',
       subtitle: 'Manage flare-ups',
       icon: Icons.water_drop_outlined,
       tint: Color(0xFF2563EB),
     ),
-    EducationTopic(
+    const DisplayItem(
       title: 'Psoriasis',
       subtitle: 'Understand the cycle',
       icon: Icons.grain_rounded,
       tint: Color(0xFF9333EA),
     ),
-    EducationTopic(
+    const DisplayItem(
       title: 'Scalp Dermatitis',
       subtitle: 'Flaking & itch relief',
       icon: Icons.spa_outlined,
@@ -136,7 +136,7 @@ class _EducationCarouselState extends State<EducationCarousel>
 }
 
 class _EducationCard extends StatelessWidget {
-  final EducationTopic topic;
+  final DisplayItem topic;
   final AppColors colors;
   final Animation<double> animation;
 

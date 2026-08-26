@@ -226,33 +226,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   height: 56,
                   child: ElevatedButton(
                     onPressed: () async {
-                            if (!mounted) return;
-                            if (_formKey.currentState!.validate()) {
-                              final success = await RetryUtil.retryOperation<bool>(
-                                    () async => await authProvider.register(
-                                  _emailController.text.trim(),
-                                  _passwordController.text,
-                                  _displayNameController.text.trim(),
-                                ),
-                                maxAttempts: 2,
-                              );
-                              if (!mounted) return;
-                              if (!success) {
-                                // Extract values before potential disposal
-                                final errorMessage = authProvider.errorMessage ?? 'Registration failed';
-                                if (!mounted) return;
-
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(errorMessage),
-                                      backgroundColor: Theme.of(context).colorScheme.error,
-                                    ),
-                                  );
-                                }
-                              }
-                            }
-                          },
+                      if (!mounted) return;
+                      if (_formKey.currentState!.validate()) {
+                        final success = await RetryUtil.retryOperation<bool>(
+                          () async => await authProvider.register(
+                            _emailController.text.trim(),
+                            _passwordController.text,
+                            _displayNameController.text.trim(),
+                          ),
+                          maxAttempts: 2,
+                        );
+                        if (!mounted) return;
+                        if (!success) {
+                          // Extract error message before potential disposal
+                          final errorMessage = authProvider.errorMessage ?? 'Registration failed';
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(errorMessage),
+                              backgroundColor: Theme.of(context).colorScheme.error,
+                            ),
+                          );
+                        }
+                      }
+                    },
                     style: elevatedButtonStyle(context),
                     child: authProvider.isLoading
                         ? const SizedBox(
