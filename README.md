@@ -12,7 +12,7 @@
 
 ## ─── 📱 ARCHITECTURAL OVERVIEW ───
 
-IntegriScan follows a clean, modular Flutter architecture with clear separation of concerns. The application uses the Provider package for state management and follows Flutter's recommended patterns for scalable applications.
+IntegriScan is an Offline-First Hybrid Mobile Application that follows a clean, modular Flutter architecture with clear separation of concerns. All persistent data (Clinical Logs, Scan History, Symptom lists, Disease Library, and app settings) is stored locally using Hive & Hive Flutter, enabling $0 cloud database costs, zero network latency, and instant 100% offline access. The application employs session caching where Firebase Auth handles initial online login, then writes an `isLoggedIn` session flag into a local Hive `authBox`, allowing the app to boot directly to the main dashboard in Airplane Mode without network timeouts. The application uses the Provider package for state management and follows Flutter's recommended patterns for scalable applications.
 
 ```
 lib/
@@ -35,7 +35,6 @@ lib/
 │   ├── pathology_triage_screen.dart # 4-step pathology assessment wizard
 │   ├── clinical_logs_screen.dart    # Time-series log viewer with filtering
 │   ├── account_screen.dart    # Profile management and settings
-│   ├── clinic_locator_screen.dart   # Healthcare provider finder
 │   └── login_screen.dart      # Authentication screens
 ├── widgets/                   # Reusable UI components
 │   ├── dashboard_header.dart  # App header with logo and user info
@@ -77,6 +76,20 @@ lib/
 ---
 
 ## ─── ⚙️ TECHNICAL STACK & SUBSYSTEMS ───
+
+### Technology Stack
+
+| Category | Technology | Purpose |
+|----------|------------|---------|
+| UI Framework | Flutter 3.0+ | Cross-platform UI development |
+| Language | Dart 3.0+ | App logic and UI |
+| State Management | Provider | Global state (theme, auth) |
+| Local Persistence | Hive & Hive Flutter | NoSQL database for all local data ($0 cost, 100% offline) |
+| Image Handling | image_picker, crop | Photo capture and editing |
+| Navigation | IndexedStack + AnimatedSwitcher | Tab preservation and step transitions |
+| Animation | Flutter's animation framework | Smooth UI transitions |
+| Utilities | path_provider, package_info_plus | System integration |
+| Dev Tools | Flutter DevTools, flutter_lints | Debugging and linting |
 
 ### 🏠 Home Dashboard UI and State Configuration
 
@@ -147,12 +160,11 @@ A comprehensive 5-step workflow (with one transient analyzing step) for dermatol
    - **Risk Levels**:
      - Low (≥2 symptoms OR no severe combination): Score 92/100, Green banner
      - Moderate (2-4 symptoms): Score 61/100, Amber banner  
-     - High (5+ symptoms OR bumps+discoloration): Score 28/100, Red banner + clinic locator CTA
+     - High (5+ symptoms OR bumps+discoloration): Score 28/100, Red banner
    - **Result Display**: `ScoreHeroCard` with override color, symptom count, body area label
    - **Callbacks**: 
      - `onTriageComplete(bool isHighRisk)` notifies `MainShell` to show/hide risk banner
-     - `onViewClinics()` opens clinic locator on high-risk results
-     - `onStartOver()` resets all state for new assessment
+          - `onStartOver()` resets all state for new assessment
 
 **Technical Implementation**:
 - Uses `IndexedStack`-like pattern with `AnimatedSwitcher` for smooth step transitions
@@ -270,12 +282,13 @@ Comprehensive user management and personalization center:
 - **Sign Out**: Secure logout via `authProvider.logout()` with state cleanup
 
 #### Local Storage Architecture
-- **Authentication**: Session-only state in `AuthProvider` (cleared on app restart)
-- **Theme Preference**: Would persist via `shared_preferences` in production
-- **Clinical Logs**: Currently in-memory demo data; production would use:
-  - `path_provider` for app documents directory
-  - Local database (Hive/SQLite) for structured log storage
-  - Image files stored in app cache directory with cleanup policies
+- **Authentication**: Session state managed via `AuthProvider` with persistent login flag stored in Hive `authBox`
+- **Theme Preference**: Persisted via Hive `settingsBox`
+- **Clinical Logs**: Stored in Hive `clinicalLogsBox` with automatic cleanup policies
+- **Scan History**: Stored in Hive `scanHistoryBox`
+- **Symptom Lists & Disease Library**: Stored in Hive `referenceDataBox`
+- **App Settings**: Stored in Hive `settingsBox`
+- **Image Files**: Stored in app cache directory (via `path_provider`) with cleanup policies
 - **Avatar Images**: Would be stored remotely with local caching in production
 
 #### Security Considerations
@@ -316,6 +329,12 @@ flutter pub get
 
 # Verify key dependencies are installed
 flutter pub outdated
+```
+
+#### 2.1. Generate Hive Adapters
+```bash
+# Generate Hive TypeAdapters for data models
+flutter pub run build_runner build --delete-conflicting-outputs
 ```
 
 #### 3. Platform Configuration
@@ -453,11 +472,11 @@ IntegriScan implements a strict privacy-first architecture where **all data proc
 
 | Data Type | Storage Location | Transmission | Persistence | User Control |
 |-----------|------------------|--------------|-------------|--------------|
-| User Profile | AuthProvider (memory) | ❌ Never transmitted | Session-only (cleared on restart) | Edit/Delete via Account Screen |
-| Theme Preference | ThemeProvider (memory) | ❌ Never transmitted | Session-only (would use shared_preferences in prod) | Toggle in Settings |
-| Clinical Logs | In-memory demo data | ❌ Never transmitted | Session-only (would use local DB in prod) | View/Edit/Delete/Share per entry |
-| Captured Images | Temporary files (path_provider) | ❌ Never transmitted | Auto-cleaned after use | Immediate review before processing |
-| Scan Metadata | ClinicalLogEntry (memory) | ❌ Never transmitted | Session-only (would persist with logs) | Inherits log entry controls |
+| User Profile (Auth Flag) | Hive `authBox` | ❌ Never transmitted | Persistent (survives app restart) | Edit/Delete via Account Screen |
+| Theme Preference | Hive `settingsBox` | ❌ Never transmitted | Persistent | Toggle in Settings |
+| Clinical Logs | Hive `clinicalLogsBox` | ❌ Never transmitted | Persistent | View/Edit/Delete/Share per entry |
+| Captured Images | App cache directory (path_provider) | ❌ Never transmitted | Auto-cleaned after use | Immediate review before processing |
+| Scan Metadata | Hive `scanHistoryBox` | ❌ Never transmitted | Persistent | Inherits log entry controls |
 
 ### Technical Privacy Safeguards
 
@@ -512,7 +531,7 @@ IntegriScan implements a strict privacy-first architecture where **all data proc
 ### Production-Ready Enhancements
 
 For deployed versions, additional privacy measures would include:
-- **Secure Storage**: Encrypted local database (SQLCipher, Encrypted SharedPreferences)
+- **Secure Storage**: Encrypted local database (Hive with encryption, SQLCipher, Encrypted SharedPreferences)
 - **Biometric Authentication**: Optional Face ID/Touch ID for app access
 - **Export Controls**: Encrypted export with user-controlled decryption
 - **Remote Wipe**: Ability to clear all data via authenticated web portal
