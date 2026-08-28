@@ -14,6 +14,8 @@ import '../theme/button_styles.dart';
 import '../theme/spacing.dart';
 import '../models/body_area.dart';
 import '../models/symptom.dart';
+import '../models/clinical_log.dart';
+import '../services/hive_service.dart';
 import '../widgets/score_hero_card.dart';
 import '../widgets/animated_body_part_dropdown.dart';
 import '../widgets/enhanced_loading.dart';
@@ -112,14 +114,13 @@ class _PathologyTriageScreenState extends State<PathologyTriageScreen> {
     } catch (e) {
       // In production, use proper logging framework
       debugPrint('Error picking image: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ErrorHandler.getUserFriendlyErrorMessage(e)),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(ErrorHandler.getUserFriendlyErrorMessage(e)),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
     }
   }
 
@@ -143,14 +144,13 @@ class _PathologyTriageScreenState extends State<PathologyTriageScreen> {
     } catch (e) {
       // In production, use proper logging framework
       debugPrint('Error picking image: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ErrorHandler.getUserFriendlyErrorMessage(e)),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(ErrorHandler.getUserFriendlyErrorMessage(e)),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
     }
   }
 
@@ -167,34 +167,33 @@ class _PathologyTriageScreenState extends State<PathologyTriageScreen> {
   }
 
   void _cropImage() async {
-  if (_capturedImageFile == null) return;
+    if (_capturedImageFile == null) return;
 
-  // Write original to temp file for crop page
-  final tempDir = await getTemporaryDirectory();
-  final tempFile = File('${tempDir.path}/crop_source_${DateTime.now().millisecondsSinceEpoch}.png');
-  await tempFile.writeAsBytes(await _capturedImageFile!.readAsBytes());
+    // Write original to temp file for crop page
+    final tempDir = await getTemporaryDirectory();
+    final tempFile = File('${tempDir.path}/crop_source_${DateTime.now().millisecondsSinceEpoch}.png');
+    await tempFile.writeAsBytes(await _capturedImageFile!.readAsBytes());
 
-  if (!mounted) return;
-  final cropped = await Navigator.of(context).push(
-    MaterialPageRoute(
-      builder: (context) => _CropPage(imageFile: tempFile),
-    ),
-  );
-
-  // Clean up temp source file
-  await tempFile.delete();
-
-  if (cropped != null) {
     if (!mounted) return;
-    // Save cropped to temp file, store XFile
-    final croppedFile = File('${tempDir.path}/cropped_${DateTime.now().millisecondsSinceEpoch}.png');
-    await croppedFile.writeAsBytes(cropped as Uint8List);
-    if (!mounted) return;
-    setState(() {
-      _croppedImageFile = XFile(croppedFile.path);
-    });
+    
+    // Explicitly expect an XFile back from the Navigator
+    final cropped = await Navigator.of(context).push<XFile>(
+      MaterialPageRoute(
+        builder: (context) => _CropPage(imageFile: tempFile),
+      ),
+    );
+
+    // Clean up temp source file
+    await tempFile.delete();
+
+    // Simply assign the returned XFile directly
+    if (cropped != null) {
+      if (!mounted) return;
+      setState(() {
+        _croppedImageFile = cropped; 
+      });
+    }
   }
-}
 
   void _retakePhoto() {
     setState(() {
@@ -232,6 +231,57 @@ class _PathologyTriageScreenState extends State<PathologyTriageScreen> {
               ? _TriageRisk.moderate
               : _TriageRisk.low;
 
+      // Calculate confidence score based on symptoms and risk
+      double confidenceScore = 0.8; // Base confidence
+      if (flagCount >= 3) confidenceScore += 0.1;
+      if (hasSevereSigns) confidenceScore += 0.1;
+      confidenceScore = confidenceScore.clamp(0.0, 1.0);
+
+      // Generate unique ID based on timestamp
+      final String uniqueId = DateTime.now().millisecondsSinceEpoch.toString();
+
+      // Determine condition based on risk and symptoms
+      String condition;
+      if (risk == _TriageRisk.low) {
+        condition = 'Normal Skin Assessment';
+      } else if (risk == _TriageRisk.moderate) {
+        condition = 'Suspected Irritation - Monitor Closely';
+      } else {
+        condition = 'Potential Concern - Professional Review Advised';
+      }
+
+      // Convert _TriageRisk to RiskLevel for Hive storage
+      RiskLevel hiveRisk;
+      switch (risk) {
+        case _TriageRisk.low:
+          hiveRisk = RiskLevel.low;
+          break;
+        case _TriageRisk.moderate:
+          hiveRisk = RiskLevel.moderate;
+          break;
+        case _TriageRisk.high:
+          hiveRisk = RiskLevel.high;
+          break;
+      }
+
+      // Create ClinicalLogEntry object
+      final ClinicalLogEntry newEntry = ClinicalLogEntry(
+        id: uniqueId,
+        bodyArea: _selectedAreaId ?? 'Unknown',
+        condition: condition,
+        loggedAt: DateTime.now(),
+        confidence: confidenceScore,
+        risk: hiveRisk,
+        status: LogStatus.monitoring,
+        trend: [confidenceScore * 0.8, confidenceScore * 0.9, confidenceScore],
+        recommendations: _getRecommendationsForRisk(risk),
+        icon: _getIconForRisk(risk),
+        imagePath: _croppedImageFile?.path, // Save the cropped image path
+      );
+
+      // Save to Hive before showing result
+      await HiveService.saveLog(newEntry);
+
       setState(() {
         _analyzing = false;
         _result = risk;
@@ -239,17 +289,57 @@ class _PathologyTriageScreenState extends State<PathologyTriageScreen> {
       widget.onTriageComplete(risk == _TriageRisk.high);
     } catch (e) {
       debugPrint('Error during analysis: $e');
-      if (mounted) {
-        setState(() {
-          _analyzing = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Unable to analyze image. Please try again with a clearer photo.'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-      }
+      if (!mounted) return;
+      setState(() {
+        _analyzing = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Unable to analyze image. Please try again with a clearer photo.'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
+  }
+
+  /// Get recommendations based on risk level
+  List<String> _getRecommendationsForRisk(_TriageRisk risk) {
+    switch (risk) {
+      case _TriageRisk.low:
+        return [
+          'Keep the area clean and moisturized',
+          'Monitor for any changes over the next week',
+          'Maintain good hygiene practices',
+          'Rescan in 7 days to confirm stability'
+        ];
+      case _TriageRisk.moderate:
+        return [
+          'Apply fragrance-free moisturizer twice daily',
+          'Avoid known irritants for 5–7 days',
+          'Track any changes in size, color, or texture',
+          'Consider a follow-up scan in 3-5 days',
+          'Consult healthcare provider if symptoms worsen'
+        ];
+      case _TriageRisk.high:
+        return [
+          'Schedule an in-person dermatologist visit',
+          'Avoid direct sun exposure on the area',
+          'Bring your scan history to the appointment',
+          'Do not apply any topical treatments before consultation',
+          'Consider taking photos for the healthcare provider'
+        ];
+    }
+  }
+
+  /// Get icon based on risk level
+  IconData _getIconForRisk(_TriageRisk risk) {
+    switch (risk) {
+      case _TriageRisk.low:
+        return Icons.check_circle_outline;
+      case _TriageRisk.moderate:
+        return Icons.warning_amber_rounded;
+      case _TriageRisk.high:
+        return Icons.error_outline;
     }
   }
 
@@ -1084,26 +1174,21 @@ class _CropPageState extends State<_CropPage> {
               ),
               ElevatedButton(
                 onPressed: () async {
-                  // Check if still mounted before starting async work
-                  if (!mounted) return;
-
                   final ui.Image? image = await _controller.crop();
-                  // Check if still mounted after async work
-                  if (!mounted) return;
+                  if (!context.mounted) return;
 
                   if (image != null) {
                     final ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-                    // Check if still mounted after async work
-                    if (!mounted) return;
+                    if (!context.mounted) return;
 
                     if (byteData != null) {
-                      if (!mounted) return;
                       final tempDir = await getTemporaryDirectory();
-                      if (!mounted) return;
+                      if (!context.mounted) return;
+
                       final croppedFile = File('${tempDir.path}/cropped_${DateTime.now().millisecondsSinceEpoch}.png');
                       await croppedFile.writeAsBytes(byteData.buffer.asUint8List());
-                      // Check if still mounted after async work
-                      if (!mounted) return;
+                      if (!context.mounted) return;
+
                       Navigator.of(context).pop(XFile(croppedFile.path));
                     }
                   }

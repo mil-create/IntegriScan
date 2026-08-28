@@ -8,8 +8,8 @@ import '../theme/spacing.dart';
 import '../models/clinical_log.dart';
 import 'clinical_log_detail_screen.dart';
 import '../widgets/skeleton_screens.dart';
-import '../utils/retry_util.dart';
 import '../widgets/svg_icon.dart';
+import '../services/hive_service.dart';
 
 class ClinicalLogsScreen extends StatefulWidget {
   final VoidCallback onLogNewScan;
@@ -69,106 +69,16 @@ class _ClinicalLogsScreenState extends State<ClinicalLogsScreen> {
   }
 
   Future<void> _loadLogs() async {
-    await Future.delayed(const Duration(milliseconds: 800));
-
-    await RetryUtil.retryOperation<bool>(
-      () async {
-        _allLogs = _generateLogs();
-        _availableBodyParts = _allLogs.map((log) => log.bodyArea).toSet().toList();
-        _availableBodyParts.sort();
-        return true;
-      },
-      maxAttempts: 2,
-    );
-  }
-
-  List<ClinicalLogEntry> _generateLogs() {
-    final now = DateTime.now();
-    return [
-      ClinicalLogEntry(
-        id: '1',
-        bodyArea: 'Left Forearm',
-        condition: 'Mild Contact Dermatitis',
-        loggedAt: now.subtract(const Duration(days: 1)),
-        confidence: 0.94,
-        risk: RiskLevel.low,
-        status: LogStatus.monitoring,
-        trend: [0.55, 0.6, 0.7, 0.66, 0.8, 0.88, 0.94],
-        icon: Icons.pan_tool_rounded,
-        recommendations: [
-          'Apply fragrance-free moisturizer twice daily',
-          'Avoid known irritants for 5–7 days',
-          'Rescan in 5 days to confirm improvement',
-        ],
-        imagePath: 'assets/scans/scan_1.jpg',
-      ),
-      ClinicalLogEntry(
-        id: '2',
-        bodyArea: 'Scalp - Crown',
-        condition: 'Seborrheic Dermatitis',
-        loggedAt: now.subtract(const Duration(days: 4)),
-        confidence: 0.81,
-        risk: RiskLevel.moderate,
-        status: LogStatus.monitoring,
-        trend: [0.4, 0.5, 0.62, 0.7, 0.75, 0.81],
-        icon: Icons.face_6_rounded,
-        recommendations: [
-          'Use an anti-dandruff shampoo 2–3x per week',
-          'Avoid excessive heat styling',
-          'Track flaking severity in your next scan',
-        ],
-        imagePath: 'assets/scans/scan_2.jpg',
-      ),
-      ClinicalLogEntry(
-        id: '3',
-        bodyArea: 'Upper Back',
-        condition: 'Irregular Pigmented Lesion',
-        loggedAt: now.subtract(const Duration(days: 9)),
-        confidence: 0.76,
-        risk: RiskLevel.high,
-        status: LogStatus.escalated,
-        trend: [0.3, 0.35, 0.5, 0.6, 0.68, 0.76],
-        icon: Icons.priority_high_rounded,
-        recommendations: [
-          'Schedule an in-person dermatologist visit',
-          'Avoid direct sun exposure on the area',
-          'Bring your scan history to the appointment',
-        ],
-        imagePath: 'assets/scans/scan_3.jpg',
-      ),
-      ClinicalLogEntry(
-        id: '4',
-        bodyArea: 'Right Cheek',
-        condition: 'Resolved Acne Lesion',
-        loggedAt: now.subtract(const Duration(days: 15)),
-        confidence: 0.97,
-        risk: RiskLevel.low,
-        status: LogStatus.resolved,
-        trend: [0.5, 0.62, 0.7, 0.8, 0.9, 0.97],
-        icon: Icons.face_retouching_natural_rounded,
-        recommendations: [
-          "Continue your current routine — it's working",
-          'No further action needed for this spot',
-        ],
-        imagePath: 'assets/scans/scan_4.jpg',
-      ),
-      ClinicalLogEntry(
-        id: '5',
-        bodyArea: 'Neck',
-        condition: 'Mild Eczema Flare',
-        loggedAt: now.subtract(const Duration(days: 22)),
-        confidence: 0.88,
-        risk: RiskLevel.moderate,
-        status: LogStatus.resolved,
-        trend: [0.45, 0.5, 0.6, 0.7, 0.8, 0.88],
-        icon: Icons.water_drop_outlined,
-        recommendations: [
-          'Keep the area moisturized',
-          'Avoid tight collars or fabric friction',
-        ],
-        imagePath: 'assets/scans/scan_5.jpg',
-      ),
-    ];
+    try {
+      _allLogs = await HiveService.getAllLogs();
+      _availableBodyParts = _allLogs.map((log) => log.bodyArea).toSet().toList();
+      _availableBodyParts.sort();
+    } catch (e) {
+      debugPrint('Error loading logs from Hive: $e');
+      // Fallback to empty list if Hive fails
+      _allLogs = [];
+      _availableBodyParts = [];
+    }
   }
 
   void _applyFiltersAndSort() {
@@ -1227,6 +1137,16 @@ class _ClinicalLogsScreenState extends State<ClinicalLogsScreen> {
                               MaterialPageRoute(builder: (_) => ClinicalLogDetailScreen(log: log)),
                             );
                           },
+                          onDelete: () async {
+                            await HiveService.deleteLog(log.id);
+                            // Refresh the logs after deletion
+                            await _loadLogs();
+                            if (mounted) {
+                              setState(() {
+                                _applyFiltersAndSort();
+                              });
+                            }
+                          },
                         ),
                       );
                     },
@@ -1244,8 +1164,9 @@ class _LogRow extends StatelessWidget {
   final AppColors colors;
   final ClinicalLogEntry log;
   final VoidCallback onTap;
+  final VoidCallback? onDelete;
 
-  const _LogRow({required this.colors, required this.log, required this.onTap});
+  const _LogRow({required this.colors, required this.log, required this.onTap, this.onDelete});
 
   Color get _statusColor {
     switch (log.status) {
@@ -1348,7 +1269,7 @@ class _LogRow extends StatelessWidget {
     showMenu(
       context: context,
       position: const RelativeRect.fromLTRB(0, 0, 0, 0),
-      items: const [
+      items: [
         PopupMenuItem<int>(
           value: 0,
           child: Row(
@@ -1390,7 +1311,11 @@ class _LogRow extends StatelessWidget {
           ),
         ),
       ],
-    );
+    ).then((value) async {
+      if (value == 2 && onDelete != null) { // Delete selected
+        onDelete!();
+      }
+    });
   }
 
   @override

@@ -7,9 +7,15 @@ import 'screens/main_shell.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'widgets/enhanced_loading.dart';
+import 'services/hive_service.dart';
 
-void main() {
+void main() async {
   debugPrint('Main entry point');
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Hive
+  await HiveService.init();
+
   runApp(const IntegriScanApp());
 }
 
